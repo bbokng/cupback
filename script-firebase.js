@@ -48,38 +48,22 @@ class CupBackAppFirebase {
             // Firestore에서 사용자 찾기
             const userSnapshot = await this.db.collection('users')
                 .where('username', '==', username)
+                .where('password', '==', password)
                 .get();
 
-            if (userSnapshot.empty) {
-                this.showToast('존재하지 않는 아이디입니다.', 'error');
+            if (!userSnapshot.empty) {
+                const userData = userSnapshot.docs[0].data();
+                // Firebase Auth로 로그인 (이메일/비밀번호 방식)
+                await this.auth.signInWithEmailAndPassword(userData.email || username + '@cupback.com', password);
+                this.showToast('로그인에 성공했습니다!', 'success');
+                return true;
+            } else {
+                this.showToast('아이디와 비밀번호가 틀렸습니다.', 'error');
                 return false;
             }
-
-            const userData = userSnapshot.docs[0].data();
-            
-            // 비밀번호 확인
-            if (userData.password !== password) {
-                this.showToast('비밀번호가 틀렸습니다.', 'error');
-                return false;
-            }
-
-            // Firebase Auth로 로그인 (이메일/비밀번호 방식)
-            await this.auth.signInWithEmailAndPassword(userData.email || username + '@cupback.com', password);
-            this.showToast('로그인에 성공했습니다!', 'success');
-            return true;
         } catch (error) {
             console.error('로그인 오류:', error);
-            
-            // Firebase Auth 오류 처리
-            if (error.code === 'auth/user-not-found') {
-                this.showToast('존재하지 않는 아이디입니다.', 'error');
-            } else if (error.code === 'auth/wrong-password') {
-                this.showToast('비밀번호가 틀렸습니다.', 'error');
-            } else if (error.code === 'auth/too-many-requests') {
-                this.showToast('로그인 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.', 'error');
-            } else {
-                this.showToast('로그인 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
-            }
+            this.showToast('로그인 중 오류가 발생했습니다.', 'error');
             return false;
         }
     }
@@ -95,23 +79,13 @@ class CupBackAppFirebase {
 
     async register(userData) {
         try {
-            // 아이디 중복 확인
-            const existingUsername = await this.db.collection('users')
+            // 중복 사용자 확인
+            const existingUser = await this.db.collection('users')
                 .where('username', '==', userData.username)
                 .get();
 
-            if (!existingUsername.empty) {
-                this.showToast('이미 존재하는 아이디입니다. 다른 아이디를 사용해주세요.', 'error');
-                return false;
-            }
-
-            // 닉네임 중복 확인
-            const existingNickname = await this.db.collection('users')
-                .where('nickname', '==', userData.nickname)
-                .get();
-
-            if (!existingNickname.empty) {
-                this.showToast('이미 존재하는 닉네임입니다. 다른 닉네임을 사용해주세요.', 'error');
+            if (!existingUser.empty) {
+                this.showToast('이미 존재하는 아이디입니다.', 'error');
                 return false;
             }
 
@@ -128,22 +102,11 @@ class CupBackAppFirebase {
             // Firebase Auth 계정 생성
             await this.auth.createUserWithEmailAndPassword(newUser.email, userData.password);
             
-            this.showToast('회원가입이 완료되었습니다!', 'success');
             window.location.href = 'signup-success.html';
             return true;
         } catch (error) {
             console.error('회원가입 오류:', error);
-            
-            // Firebase Auth 오류 처리
-            if (error.code === 'auth/email-already-in-use') {
-                this.showToast('이미 존재하는 아이디입니다. 다른 아이디를 사용해주세요.', 'error');
-            } else if (error.code === 'auth/weak-password') {
-                this.showToast('비밀번호가 너무 약합니다. 더 강한 비밀번호를 사용해주세요.', 'error');
-            } else if (error.code === 'auth/invalid-email') {
-                this.showToast('유효하지 않은 이메일 형식입니다.', 'error');
-            } else {
-                this.showToast('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
-            }
+            this.showToast('회원가입 중 오류가 발생했습니다.', 'error');
             return false;
         }
     }

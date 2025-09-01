@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CupBack - Firebase 설정 안내</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .step {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #4caf50;
+        }
+        .code {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .highlight {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #1565c0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .screenshot {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌐 CupBack - 모든 기기에서 데이터 공유하기</h1>
+    
+    <div class="warning">
+        <strong>⚠️ 현재 상황:</strong> 각 기기마다 데이터가 따로 저장되고 있어요.
+    </div>
+    
+    <h2>🚀 Firebase로 해결하기 (추천)</h2>
+    
+    <div class="step">
+        <h3>1단계: Firebase 프로젝트 생성</h3>
+        <ol>
+            <li><a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a>에 접속</li>
+            <li>"프로젝트 추가" 클릭</li>
+            <li>프로젝트 이름: "cupback-app" 입력</li>
+            <li>Google Analytics 비활성화 (선택사항)</li>
+            <li>"프로젝트 만들기" 클릭</li>
+        </ol>
+    </div>
+    
+    <div class="step">
+        <h3>2단계: 웹 앱 등록</h3>
+        <ol>
+            <li>Firebase Console에서 "웹 앱 추가" 클릭</li>
+            <li>앱 닉네임: "cupback-web" 입력</li>
+            <li>"앱 등록" 클릭</li>
+            <li>설정 코드 복사 (나중에 사용)</li>
+        </ol>
+    </div>
+    
+    <div class="step">
+        <h3>3단계: Firestore 데이터베이스 생성</h3>
+        <div class="highlight">
+            <strong>🎯 이 단계가 가장 중요합니다!</strong>
+        </div>
+        <ol>
+            <li><strong>왼쪽 메뉴에서 "Firestore Database" 클릭</strong>
+                <div class="screenshot">
+                    📍 Firebase Console 왼쪽 사이드바에서 "Firestore Database" 찾기
+                </div>
+            </li>
+            <li><strong>"데이터베이스 만들기" 클릭</strong>
+                <div class="screenshot">
+                    🔥 중앙에 있는 파란색 "데이터베이스 만들기" 버튼 클릭
+                </div>
+            </li>
+            <li><strong>보안 규칙 선택</strong>
+                <div class="screenshot">
+                    🛡️ "테스트 모드에서 시작" 선택 (나중에 보안 설정 가능)
+                </div>
+            </li>
+            <li><strong>위치 선택</strong>
+                <div class="screenshot">
+                    🌏 "asia-northeast3 (서울)" 선택 (한국에서 가장 빠름)
+                </div>
+            </li>
+            <li><strong>"완료" 클릭</strong>
+                <div class="screenshot">
+                    ✅ 데이터베이스 생성 완료까지 1-2분 대기
+                </div>
+            </li>
+        </ol>
+        
+        <div class="success">
+            <strong>✅ 완료 확인:</strong>
+            <ul>
+                <li>Firestore Database 페이지에 "데이터" 탭이 보임</li>
+                <li>왼쪽에 "컬렉션 시작" 버튼이 보임</li>
+                <li>상단에 프로젝트 ID가 표시됨</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="step">
+        <h3>4단계: 코드 수정</h3>
+        <p>Firebase 설정이 완료되면 제가 코드를 수정해드릴게요!</p>
+        
+        <div class="code">
+            <strong>다음 단계:</strong><br>
+            1. 설정 정보를 firebase-config.js에 입력<br>
+            2. HTML 파일에 Firebase SDK 추가<br>
+            3. 스크립트 파일 교체
+        </div>
+    </div>
+    
+    <div class="success">
+        <strong>✅ 완료 후 효과:</strong>
+        <ul>
+            <li>모든 기기에서 같은 데이터 공유</li>
+            <li>실시간으로 업데이트</li>
+            <li>무료로 시작 가능 (월 1GB까지 무료)</li>
+            <li>안전한 데이터 저장</li>
+        </ul>
+    </div>
+    
+    <h2>🔧 다른 방법들</h2>
+    
+    <div class="step">
+        <h3>Supabase (PostgreSQL 기반)</h3>
+        <p>더 강력한 데이터베이스 기능이 필요하다면</p>
+        <a href="https://supabase.com/" target="_blank">Supabase 바로가기</a>
+    </div>
+    
+    <div class="step">
+        <h3>Vercel + MongoDB</h3>
+        <p>서버리스 함수와 MongoDB 조합</p>
+        <a href="https://vercel.com/" target="_blank">Vercel 바로가기</a>
+    </div>
+    
+    <div class="step">
+        <h3>Netlify + Fauna</h3>
+        <p>Netlify Functions와 Fauna DB 조합</p>
+        <a href="https://netlify.com/" target="_blank">Netlify 바로가기</a>
+    </div>
+    
+    <p><strong>어떤 방법으로 진행하시겠어요?</strong> Firebase가 가장 간단하고 추천드려요! 🎯</p>
+</body>
+</html>
