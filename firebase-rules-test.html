@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 보안 규칙 테스트</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+        }
+        .test-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .result { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border-left: 4px solid;
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border-color: #28a745;
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border-color: #dc3545;
+        }
+        .warning { 
+            background: #fff3cd; 
+            color: #856404; 
+            border-color: #ffc107;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        #log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 Firebase 보안 규칙 및 기능 테스트</h1>
+    
+    <div class="test-section">
+        <h3>1. 기본 연결 테스트</h3>
+        <button onclick="testBasicConnection()">기본 연결 테스트</button>
+        <div id="basic-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Firestore 읽기/쓰기 테스트</h3>
+        <button onclick="testFirestoreRead()">읽기 테스트</button>
+        <button onclick="testFirestoreWrite()">쓰기 테스트</button>
+        <div id="firestore-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. 사용자 등록 테스트</h3>
+        <div class="form-group">
+            <label>아이디: <input type="text" id="testUsername" placeholder="testuser"></label>
+        </div>
+        <div class="form-group">
+            <label>비밀번호: <input type="password" id="testPassword" placeholder="123456"></label>
+        </div>
+        <div class="form-group">
+            <label>닉네임: <input type="text" id="testNickname" placeholder="테스트유저"></label>
+        </div>
+        <button onclick="testUserRegistration()">사용자 등록 테스트</button>
+        <div id="registration-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. 사용자 로그인 테스트</h3>
+        <div class="form-group">
+            <label>아이디: <input type="text" id="loginUsername" placeholder="testuser"></label>
+        </div>
+        <div class="form-group">
+            <label>비밀번호: <input type="password" id="loginPassword" placeholder="123456"></label>
+        </div>
+        <button onclick="testUserLogin()">로그인 테스트</button>
+        <div id="login-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>5. 기존 사용자 조회</h3>
+        <button onclick="listAllUsers()">모든 사용자 조회</button>
+        <div id="users-results"></div>
+    </div>
+
+    <h3>상세 로그:</h3>
+    <div id="log"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase 설정 -->
+    <script src="firebase-config.js"></script>
+    
+    <script>
+        let currentUser = null;
+
+        // 로그 함수
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #666;">[${time}]</span> ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // 결과 표시 함수
+        function showResult(containerId, message, type = 'success') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = message;
+            container.appendChild(div);
+        }
+
+        // 기본 연결 테스트
+        async function testBasicConnection() {
+            try {
+                log('기본 연결 테스트 시작...');
+                
+                if (typeof firebase === 'undefined') {
+                    showResult('basic-results', '❌ Firebase SDK가 로드되지 않았습니다!', 'error');
+                    return;
+                }
+                
+                const db = firebase.firestore();
+                const auth = firebase.auth();
+                
+                showResult('basic-results', '✅ Firebase SDK 로드 완료', 'success');
+                showResult('basic-results', '✅ Firestore 객체 생성 완료', 'success');
+                showResult('basic-results', '✅ Auth 객체 생성 완료', 'success');
+                
+                log('기본 연결 테스트 성공', 'success');
+                
+            } catch (error) {
+                showResult('basic-results', `❌ 기본 연결 테스트 오류: ${error.message}`, 'error');
+                log(`기본 연결 테스트 오류: ${error.message}`, 'error');
+            }
+        }
+
+        // Firestore 읽기 테스트
+        async function testFirestoreRead() {
+            try {
+                log('Firestore 읽기 테스트 시작...');
+                
+                const db = firebase.firestore();
+                const testDoc = await db.collection('test').doc('connection').get();
+                
+                if (testDoc.exists) {
+                    showResult('firestore-results', '✅ Firestore 읽기 성공', 'success');
+                    log(`읽기 성공: ${JSON.stringify(testDoc.data())}`, 'success');
+                } else {
+                    showResult('firestore-results', '⚠️ 문서가 존재하지 않음 (정상)', 'warning');
+                    log('문서가 존재하지 않음 (정상)', 'warning');
+                }
+                
+            } catch (error) {
+                showResult('firestore-results', `❌ Firestore 읽기 오류: ${error.message}`, 'error');
+                log(`Firestore 읽기 오류: ${error.message}`, 'error');
+            }
+        }
+
+        // Firestore 쓰기 테스트
+        async function testFirestoreWrite() {
+            try {
+                log('Firestore 쓰기 테스트 시작...');
+                
+                const db = firebase.firestore();
+                await db.collection('test').doc('connection').set({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    message: '연결 테스트',
+                    testTime: new Date().toISOString()
+                });
+                
+                showResult('firestore-results', '✅ Firestore 쓰기 성공', 'success');
+                log('Firestore 쓰기 성공', 'success');
+                
+            } catch (error) {
+                showResult('firestore-results', `❌ Firestore 쓰기 오류: ${error.message}`, 'error');
+                log(`Firestore 쓰기 오류: ${error.message}`, 'error');
+            }
+        }
+
+        // 사용자 등록 테스트
+        async function testUserRegistration() {
+            try {
+                log('사용자 등록 테스트 시작...');
+                
+                const username = document.getElementById('testUsername').value || 'testuser';
+                const password = document.getElementById('testPassword').value || '123456';
+                const nickname = document.getElementById('testNickname').value || '테스트유저';
+                
+                const db = firebase.firestore();
+                const auth = firebase.auth();
+                
+                // 1. 아이디 중복 확인
+                const existingUser = await db.collection('users')
+                    .where('username', '==', username)
+                    .get();
+                
+                if (!existingUser.empty) {
+                    showResult('registration-results', '⚠️ 이미 존재하는 아이디입니다', 'warning');
+                    log('이미 존재하는 아이디', 'warning');
+                    return;
+                }
+                
+                // 2. Firebase Auth 계정 생성
+                const email = `${username}@cupback.com`;
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                
+                // 3. Firestore에 사용자 정보 저장
+                const newUser = {
+                    id: userCredential.user.uid,
+                    username: username,
+                    nickname: nickname,
+                    email: email,
+                    department: '테스트학과',
+                    year: '1',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                await db.collection('users').doc(userCredential.user.uid).set(newUser);
+                
+                showResult('registration-results', '✅ 사용자 등록 성공!', 'success');
+                log(`사용자 등록 성공: ${userCredential.user.uid}`, 'success');
+                
+                // 로그아웃
+                await auth.signOut();
+                
+            } catch (error) {
+                showResult('registration-results', `❌ 사용자 등록 오류: ${error.message}`, 'error');
+                log(`사용자 등록 오류: ${error.message}`, 'error');
+            }
+        }
+
+        // 사용자 로그인 테스트
+        async function testUserLogin() {
+            try {
+                log('사용자 로그인 테스트 시작...');
+                
+                const username = document.getElementById('loginUsername').value || 'testuser';
+                const password = document.getElementById('loginPassword').value || '123456';
+                
+                const db = firebase.firestore();
+                const auth = firebase.auth();
+                
+                // 1. Firestore에서 사용자 찾기
+                const userSnapshot = await db.collection('users')
+                    .where('username', '==', username)
+                    .get();
+                
+                if (userSnapshot.empty) {
+                    showResult('login-results', '❌ 존재하지 않는 아이디입니다', 'error');
+                    log('존재하지 않는 아이디', 'error');
+                    return;
+                }
+                
+                const userData = userSnapshot.docs[0].data();
+                
+                // 2. Firebase Auth로 로그인
+                await auth.signInWithEmailAndPassword(userData.email, password);
+                
+                showResult('login-results', '✅ 로그인 성공!', 'success');
+                showResult('login-results', `닉네임: ${userData.nickname}`, 'success');
+                log(`로그인 성공: ${userData.nickname}`, 'success');
+                
+                currentUser = auth.currentUser;
+                
+            } catch (error) {
+                showResult('login-results', `❌ 로그인 오류: ${error.message}`, 'error');
+                log(`로그인 오류: ${error.message}`, 'error');
+            }
+        }
+
+        // 모든 사용자 조회
+        async function listAllUsers() {
+            try {
+                log('모든 사용자 조회 시작...');
+                
+                const db = firebase.firestore();
+                const usersSnapshot = await db.collection('users').get();
+                
+                if (usersSnapshot.empty) {
+                    showResult('users-results', '사용자가 없습니다', 'warning');
+                    log('사용자가 없음', 'warning');
+                    return;
+                }
+                
+                showResult('users-results', `총 ${usersSnapshot.size}명의 사용자가 있습니다:`, 'success');
+                
+                usersSnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    showResult('users-results', 
+                        `- ${userData.nickname} (${userData.username}) - ${userData.department}`, 
+                        'success');
+                    log(`사용자: ${userData.nickname} (${userData.username})`, 'success');
+                });
+                
+            } catch (error) {
+                showResult('users-results', `❌ 사용자 조회 오류: ${error.message}`, 'error');
+                log(`사용자 조회 오류: ${error.message}`, 'error');
+            }
+        }
+
+        // 페이지 로드 시 자동 테스트
+        window.addEventListener('load', () => {
+            log('페이지 로드됨');
+            setTimeout(testBasicConnection, 1000);
+        });
+    </script>
+</body>
+</html>
