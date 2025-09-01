@@ -276,14 +276,14 @@ class CupBackApp {
         console.log('정리된 코드:', JSON.stringify(cleanCode));
         console.log('코드 길이:', code.length);
         console.log('정리된 코드 길이:', cleanCode.length);
-        console.log('wlfans 포함 여부:', cleanCode.includes('WLFANS'));
-        console.log('정확히 일치 여부:', cleanCode === 'WLFANS');
+        console.log('CUPBACK-2025 포함 여부:', cleanCode.includes('CUPBACK-2025'));
+        console.log('정확히 일치 여부:', cleanCode === 'CUPBACK-2025');
         console.log('========================');
         
-        // 더 유연한 매칭 - 정확히 wlfans이거나 포함되어 있으면 인식
-        if (cleanCode === 'WLFANS' || cleanCode.includes('WLFANS') || 
-            code.toLowerCase().includes('wlfans') || code.toLowerCase() === 'wlfans') {
-            const ok = this.addScan('WLFANS');
+        // CUPBACK-2025 인식 (더 유연한 매칭)
+        if (cleanCode === 'CUPBACK-2025' || cleanCode.includes('CUPBACK-2025') || 
+            code.toLowerCase().includes('cupback-2025') || code.toLowerCase() === 'cupback-2025') {
+            const ok = this.addScan('CUPBACK-2025');
             if (ok) {
                 document.getElementById('scanCode').value = '';
                 this.showToast('컵 회수가 성공적으로 기록되었습니다! 🌱', 'success');
