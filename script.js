@@ -221,18 +221,42 @@ class CupBackApp {
                 const html5QrCode = new Html5Qrcode('qrReader');
                 try {
                     const cameras = await Html5Qrcode.getCameras();
-                    const cameraId = cameras && cameras.length ? cameras[0].id : null;
-                    if (!cameraId) { this.showToast('카메라를 찾을 수 없습니다.', 'error'); return; }
+                    if (!cameras || cameras.length === 0) { 
+                        this.showToast('카메라를 찾을 수 없습니다.', 'error'); 
+                        qrReaderDiv.style.display = 'none';
+                        startQrBtn.style.display = 'inline-flex';
+                        return; 
+                    }
+                    
+                    // 후면 카메라 우선 선택 (back, rear, environment 등이 포함된 카메라)
+                    let cameraId = cameras[0].id;
+                    for (let camera of cameras) {
+                        if (camera.label.toLowerCase().includes('back') || 
+                            camera.label.toLowerCase().includes('rear') || 
+                            camera.label.toLowerCase().includes('environment') ||
+                            camera.label.toLowerCase().includes('후면') ||
+                            camera.label.toLowerCase().includes('뒷면')) {
+                            cameraId = camera.id;
+                            break;
+                        }
+                    }
+                    
                     await html5QrCode.start(
                         cameraId,
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        { 
+                            fps: 10, 
+                            qrbox: { width: 250, height: 250 },
+                            aspectRatio: 1.0
+                        },
                         (decodedText) => {
                             this.handleScanCode(decodedText);
                             html5QrCode.stop();
                             qrReaderDiv.style.display = 'none';
                             startQrBtn.style.display = 'inline-flex';
                         },
-                        () => {}
+                        (errorMessage) => {
+                            // QR 코드 인식 실패 시 무시 (계속 스캔)
+                        }
                     );
                 } catch (err) {
                     this.showToast('카메라 접근 실패: HTTPS 환경과 권한을 확인하세요.', 'error');
@@ -244,14 +268,19 @@ class CupBackApp {
     }
 
     handleScanCode(code) {
-        const VALID_CODE = 'CUPBACK-FINAL-ONE';
-        if (code === VALID_CODE) {
-            const ok = this.addScan(code);
+        const VALID_CODES = ['WLFANS'];
+        
+        // QR 코드 내용 정리 (공백 제거, 대소문자 구분 없이)
+        const cleanCode = code.trim().toUpperCase();
+        
+        if (VALID_CODES.includes(cleanCode)) {
+            const ok = this.addScan(cleanCode);
             if (ok) {
                 document.getElementById('scanCode').value = '';
+                this.showToast('컵 회수가 성공적으로 기록되었습니다! 🌱', 'success');
             }
         } else {
-            this.showToast('유효하지 않은 코드입니다.', 'error');
+            this.showToast(`유효하지 않은 QR 코드입니다. (인식된 코드: ${code})`, 'error');
         }
     }
 
