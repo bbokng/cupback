@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 디버그</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🔥 Firebase 연결 상태 확인</h1>
+    
+    <div id="status"></div>
+    
+    <button onclick="testFirebase()">Firebase 테스트</button>
+    <button onclick="testAuth()">인증 테스트</button>
+    <button onclick="testFirestore()">Firestore 테스트</button>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <!-- Firebase 설정 -->
+    <script src="firebase-config.js"></script>
+    
+    <script>
+        function addStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            statusDiv.appendChild(div);
+        }
+
+        async function testFirebase() {
+            try {
+                addStatus('Firebase SDK 로드 확인 중...', 'warning');
+                
+                if (typeof firebase === 'undefined') {
+                    addStatus('❌ Firebase SDK가 로드되지 않았습니다!', 'error');
+                    return;
+                }
+                
+                addStatus('✅ Firebase SDK 로드 완료', 'success');
+                
+                if (typeof firebase.initializeApp === 'function') {
+                    addStatus('✅ Firebase 초기화 함수 확인', 'success');
+                } else {
+                    addStatus('❌ Firebase 초기화 함수 없음', 'error');
+                }
+                
+            } catch (error) {
+                addStatus(`❌ Firebase 테스트 오류: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAuth() {
+            try {
+                addStatus('Firebase Auth 테스트 중...', 'warning');
+                
+                const auth = firebase.auth();
+                addStatus('✅ Firebase Auth 객체 생성 완료', 'success');
+                
+                // 익명 로그인 테스트
+                const result = await auth.signInAnonymously();
+                addStatus(`✅ 익명 로그인 성공: ${result.user.uid}`, 'success');
+                
+                // 로그아웃
+                await auth.signOut();
+                addStatus('✅ 로그아웃 완료', 'success');
+                
+            } catch (error) {
+                addStatus(`❌ Auth 테스트 오류: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFirestore() {
+            try {
+                addStatus('Firestore 테스트 중...', 'warning');
+                
+                const db = firebase.firestore();
+                addStatus('✅ Firestore 객체 생성 완료', 'success');
+                
+                // 간단한 읽기 테스트
+                const testDoc = await db.collection('test').doc('connection').get();
+                addStatus('✅ Firestore 읽기 테스트 완료', 'success');
+                
+                // 간단한 쓰기 테스트
+                await db.collection('test').doc('connection').set({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    message: '연결 테스트'
+                });
+                addStatus('✅ Firestore 쓰기 테스트 완료', 'success');
+                
+            } catch (error) {
+                addStatus(`❌ Firestore 테스트 오류: ${error.message}`, 'error');
+            }
+        }
+
+        // 페이지 로드 시 자동 테스트
+        window.addEventListener('load', () => {
+            addStatus('페이지 로드됨', 'success');
+            setTimeout(testFirebase, 1000);
+        });
+    </script>
+</body>
+</html>
