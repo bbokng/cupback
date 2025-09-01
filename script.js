@@ -45,6 +45,8 @@ class CupBackAppFirebase {
     // 사용자 인증
     async login(username, password) {
         try {
+            console.log('로그인 시도:', username);
+            
             // Firestore에서 사용자 찾기
             const userSnapshot = await this.db.collection('users')
                 .where('username', '==', username)
@@ -56,6 +58,9 @@ class CupBackAppFirebase {
             }
 
             const userData = userSnapshot.docs[0].data();
+            const userDocId = userSnapshot.docs[0].id;
+            
+            console.log('사용자 정보 찾음:', userDocId);
             
             // 비밀번호 확인
             if (userData.password !== password) {
@@ -65,6 +70,8 @@ class CupBackAppFirebase {
 
             // Firebase Auth로 로그인 (이메일/비밀번호 방식)
             await this.auth.signInWithEmailAndPassword(userData.email || username + '@cupback.com', password);
+            console.log('Firebase Auth 로그인 성공');
+            
             this.showToast('로그인에 성공했습니다!', 'success');
             return true;
         } catch (error) {
@@ -95,6 +102,8 @@ class CupBackAppFirebase {
 
     async register(userData) {
         try {
+            console.log('회원가입 시작:', userData.username);
+            
             // 아이디 중복 확인
             const existingUsername = await this.db.collection('users')
                 .where('username', '==', userData.username)
@@ -115,18 +124,22 @@ class CupBackAppFirebase {
                 return false;
             }
 
-            // 새 사용자 생성
+            // Firebase Auth 계정 먼저 생성
+            const email = userData.username + '@cupback.com';
+            const userCredential = await this.auth.createUserWithEmailAndPassword(email, userData.password);
+            const firebaseAuthUid = userCredential.user.uid;
+            
+            console.log('Firebase Auth 계정 생성 완료:', firebaseAuthUid);
+
+            // Firestore에 사용자 정보 저장 (Firebase Auth UID를 문서 ID로 사용)
             const newUser = {
-                id: Date.now().toString(),
-                email: userData.username + '@cupback.com', // 임시 이메일
+                email: email,
                 ...userData,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            await this.db.collection('users').doc(newUser.id).set(newUser);
-            
-            // Firebase Auth 계정 생성
-            await this.auth.createUserWithEmailAndPassword(newUser.email, userData.password);
+            await this.db.collection('users').doc(firebaseAuthUid).set(newUser);
+            console.log('Firestore 사용자 정보 저장 완료');
             
             this.showToast('회원가입이 완료되었습니다!', 'success');
             window.location.href = 'signup-success.html';
@@ -156,13 +169,42 @@ class CupBackAppFirebase {
         }
 
         try {
+            console.log('스캔 추가 시작:', code);
+            
+            // 올바른 사용자 ID 찾기
+            let correctUserId = this.currentUser.uid;
+            
+            // 먼저 Firebase Auth UID로 사용자 정보 확인
+            const userSnapshot = await this.db.collection('users')
+                .doc(this.currentUser.uid)
+                .get();
+            
+            if (!userSnapshot.exists) {
+                // Firestore 문서 ID로 사용자 찾기
+                const usersSnapshot = await this.db.collection('users')
+                    .where('email', '==', this.currentUser.email)
+                    .get();
+                
+                if (!usersSnapshot.empty) {
+                    correctUserId = usersSnapshot.docs[0].id;
+                    console.log('올바른 사용자 ID 찾음:', correctUserId);
+                }
+            }
+            
             const today = new Date().toISOString().split('T')[0];
             
-            // 오늘 이미 스캔했는지 확인
-            const existingScan = await this.db.collection('scans')
+            // 오늘 이미 스캔했는지 확인 (Firebase Auth UID와 Firestore 문서 ID 모두 확인)
+            let existingScan = await this.db.collection('scans')
                 .where('userId', '==', this.currentUser.uid)
                 .where('date', '==', today)
                 .get();
+
+            if (existingScan.empty && correctUserId !== this.currentUser.uid) {
+                existingScan = await this.db.collection('scans')
+                    .where('userId', '==', correctUserId)
+                    .where('date', '==', today)
+                    .get();
+            }
 
             if (!existingScan.empty) {
                 this.showToast('오늘은 이미 적립되었습니다. 내일 다시 시도해 주세요.', 'warning');
@@ -171,13 +213,16 @@ class CupBackAppFirebase {
 
             // 새 스캔 추가
             const newScan = {
-                userId: this.currentUser.uid,
+                userId: correctUserId,
                 date: today,
                 code: code,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
+            console.log('새 스캔 데이터:', newScan);
             await this.db.collection('scans').add(newScan);
+            console.log('스캔 저장 완료');
+            
             this.showToast('하나의 컵이 자연으로 돌아갔어요!', 'success');
             return true;
         } catch (error) {
@@ -211,9 +256,31 @@ class CupBackAppFirebase {
 
     async getUserStats(userId) {
         try {
-            const scansSnapshot = await this.db.collection('scans')
+            console.log('사용자 통계 조회 시작:', userId);
+            
+            // Firebase Auth UID와 Firestore 문서 ID 모두로 스캔 기록 찾기
+            let scansSnapshot = await this.db.collection('scans')
                 .where('userId', '==', userId)
                 .get();
+            
+            // 만약 Firebase Auth UID로 찾지 못했다면, 이메일로 사용자 정보를 찾아서 다시 시도
+            if (scansSnapshot.empty && this.currentUser && this.currentUser.email) {
+                const usersSnapshot = await this.db.collection('users')
+                    .where('email', '==', this.currentUser.email)
+                    .get();
+                
+                if (!usersSnapshot.empty) {
+                    const userData = usersSnapshot.docs[0].data();
+                    const userDocId = usersSnapshot.docs[0].id;
+                    
+                    console.log('이메일로 사용자 찾음:', userDocId);
+                    
+                    // Firestore 문서 ID로 다시 스캔 기록 찾기
+                    scansSnapshot = await this.db.collection('scans')
+                        .where('userId', '==', userDocId)
+                        .get();
+                }
+            }
             
             const today = new Date().toISOString().split('T')[0];
             const scans = scansSnapshot.docs.map(doc => doc.data());
@@ -221,6 +288,8 @@ class CupBackAppFirebase {
             const totalCups = scans.length;
             const todayCups = scans.filter(scan => scan.date === today).length;
             const totalCO2 = totalCups * 30;
+            
+            console.log('사용자 통계 결과:', { totalCups, todayCups, totalCO2 });
             
             return { totalCups, todayCups, totalCO2 };
         } catch (error) {
@@ -378,7 +447,7 @@ class CupBackAppFirebase {
                     scan.userId === user.email
                 );
                 
-                console.log(`사용자 ${user.nickname}의 스캔 기록:`, userScans.length, '개');
+                console.log(`사용자 ${user.nickname || user.name || '익명'}의 스캔 기록:`, userScans.length, '개');
                 
                 return { 
                     ...user, 
@@ -388,7 +457,7 @@ class CupBackAppFirebase {
             }).sort((a, b) => b.totalCups - a.totalCups);
             
             console.log('개인 랭킹:', personalRanking.map(r => ({ 
-                nickname: r.nickname, 
+                nickname: r.nickname || r.name, 
                 department: r.department, 
                 totalCups: r.totalCups 
             })));
@@ -427,6 +496,7 @@ class CupBackAppFirebase {
             return { personalRanking, departmentRanking };
         } catch (error) {
             console.error('랭킹 조회 오류:', error);
+            this.showToast('랭킹 데이터를 불러오는 데 실패했습니다.', 'error');
             return { personalRanking: [], departmentRanking: [] };
         }
     }
@@ -453,21 +523,54 @@ class CupBackAppFirebase {
         if (this.currentUser) {
             if (loginBtn) loginBtn.style.display = 'none';
             if (userInfo) {
-                // 사용자 정보 가져오기
-                this.db.collection('users').doc(this.currentUser.uid).get()
-                    .then(doc => {
-                        if (doc.exists) {
-                            const userData = doc.data();
-                            userInfo.textContent = `${userData.nickname || userData.name}님`;
-                            userInfo.style.display = 'inline-block';
-                        }
-                    });
+                // 사용자 정보 가져오기 (Firebase Auth UID와 Firestore 문서 ID 모두 시도)
+                this.getUserInfoForNavigation();
             }
             if (logoutBtn) logoutBtn.style.display = 'inline-block';
         } else {
             if (loginBtn) loginBtn.style.display = 'inline-block';
             if (userInfo) userInfo.style.display = 'none';
             if (logoutBtn) logoutBtn.style.display = 'none';
+        }
+    }
+
+    // 네비게이션용 사용자 정보 조회
+    async getUserInfoForNavigation() {
+        const userInfo = document.getElementById('userInfo');
+        if (!userInfo) return;
+
+        try {
+            let userData = null;
+            
+            // 먼저 Firebase Auth UID로 시도
+            const userSnapshot = await this.db.collection('users')
+                .doc(this.currentUser.uid)
+                .get();
+            
+            if (userSnapshot.exists) {
+                userData = userSnapshot.data();
+            } else {
+                // Firestore 문서 ID로 시도
+                const usersSnapshot = await this.db.collection('users')
+                    .where('email', '==', this.currentUser.email)
+                    .get();
+                
+                if (!usersSnapshot.empty) {
+                    userData = usersSnapshot.docs[0].data();
+                }
+            }
+            
+            if (userData) {
+                userInfo.textContent = `${userData.nickname || userData.name || '사용자'}님`;
+                userInfo.style.display = 'inline-block';
+            } else {
+                userInfo.textContent = '사용자님';
+                userInfo.style.display = 'inline-block';
+            }
+        } catch (error) {
+            console.error('사용자 정보 조회 오류:', error);
+            userInfo.textContent = '사용자님';
+            userInfo.style.display = 'inline-block';
         }
     }
 
@@ -791,12 +894,32 @@ class CupBackAppFirebase {
             const activityListEl = document.getElementById('activityList');
             if (!activityListEl) return;
             
-            // 사용자의 최근 스캔 기록 가져오기
-            const scansSnapshot = await this.db.collection('scans')
+            // 사용자의 최근 스캔 기록 가져오기 (Firebase Auth UID와 Firestore 문서 ID 모두 시도)
+            let scansSnapshot = await this.db.collection('scans')
                 .where('userId', '==', this.currentUser.uid)
                 .orderBy('createdAt', 'desc')
                 .limit(5)
                 .get();
+            
+            // 만약 Firebase Auth UID로 찾지 못했다면, 이메일로 사용자 정보를 찾아서 다시 시도
+            if (scansSnapshot.empty && this.currentUser && this.currentUser.email) {
+                const usersSnapshot = await this.db.collection('users')
+                    .where('email', '==', this.currentUser.email)
+                    .get();
+                
+                if (!usersSnapshot.empty) {
+                    const userDocId = usersSnapshot.docs[0].id;
+                    
+                    console.log('이메일로 사용자 찾음 (활동):', userDocId);
+                    
+                    // Firestore 문서 ID로 다시 스캔 기록 찾기
+                    scansSnapshot = await this.db.collection('scans')
+                        .where('userId', '==', userDocId)
+                        .orderBy('createdAt', 'desc')
+                        .limit(5)
+                        .get();
+                }
+            }
             
             const activities = scansSnapshot.docs.map(doc => {
                 const data = doc.data();
@@ -901,18 +1024,22 @@ class CupBackAppFirebase {
                     (post.createdAt.toDate ? new Date(post.createdAt.toDate()).toLocaleDateString() : 
                      new Date(post.createdAt).toLocaleDateString()) : '방금 전';
                 
+                const displayWriter = post.writer || '익명';
+                const likeCount = post.likes ? post.likes.length : 0;
+                const isLiked = post.likes && this.currentUser && post.likes.includes(this.currentUser.uid);
+                
                 return `
                     <div class="post-card">
                         <div class="post-header">
-                            <span class="post-writer">${post.writer || '익명'}</span>
+                            <span class="post-writer">${displayWriter}</span>
                             <span class="post-date">${postDate}</span>
                         </div>
                         <h3 class="post-title">${post.title}</h3>
                         <p class="post-content">${post.content}</p>
                         ${post.image ? `<img src="${post.image}" alt="게시글 이미지" class="post-image">` : ''}
                         <div class="post-actions">
-                            <button onclick="window.cupBackApp.toggleLike('${post.id}')" class="like-btn ${post.likes && post.likes.includes(window.cupBackApp.currentUser?.uid) ? 'liked' : ''}">
-                                ❤️ ${post.likes ? post.likes.length : 0}
+                            <button onclick="window.cupBackApp.toggleLike('${post.id}')" class="like-btn ${isLiked ? 'liked' : ''}">
+                                ❤️ ${likeCount}
                             </button>
                         </div>
                     </div>
@@ -923,6 +1050,7 @@ class CupBackAppFirebase {
             
         } catch (error) {
             console.error('게시글 로드 오류:', error);
+            this.showToast('게시글을 불러오는 데 실패했습니다.', 'error');
         }
     }
 
@@ -948,14 +1076,17 @@ class CupBackAppFirebase {
                 } else {
                     personalRankingEl.innerHTML = rankings.personalRanking.map((user, index) => {
                         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                        const displayName = user.nickname || user.name || '익명';
+                        const displayDept = user.department || '학과 미지정';
+                        
                         return `
                             <div class="ranking-item">
                                 <div class="ranking-number">
                                     ${medal}${index + 1}
                                 </div>
                                 <div class="ranking-info">
-                                    <div class="ranking-name">${user.nickname || user.name || '익명'}</div>
-                                    <div class="ranking-dept">${user.department || '학과 미지정'}</div>
+                                    <div class="ranking-name">${displayName}</div>
+                                    <div class="ranking-dept">${displayDept}</div>
                                 </div>
                                 <div class="ranking-stats">
                                     <div class="ranking-cups">${user.totalCups}개</div>
@@ -1002,6 +1133,7 @@ class CupBackAppFirebase {
             
         } catch (error) {
             console.error('랭킹 로드 오류:', error);
+            this.showToast('랭킹을 불러오는 데 실패했습니다.', 'error');
         }
     }
 }
