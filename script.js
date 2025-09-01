@@ -271,11 +271,18 @@ class CupBackApp {
         // QR 코드 내용 정리 (공백, 줄바꿈, 특수문자 제거, 대소문자 구분 없이)
         const cleanCode = code.trim().toUpperCase().replace(/[\r\n\t\s]/g, '');
         
-        console.log('QR 코드 인식 내용:', code);
-        console.log('정리된 코드:', cleanCode);
+        console.log('=== QR 코드 디버깅 ===');
+        console.log('원본 QR 코드 내용:', JSON.stringify(code));
+        console.log('정리된 코드:', JSON.stringify(cleanCode));
+        console.log('코드 길이:', code.length);
+        console.log('정리된 코드 길이:', cleanCode.length);
+        console.log('wlfans 포함 여부:', cleanCode.includes('WLFANS'));
+        console.log('정확히 일치 여부:', cleanCode === 'WLFANS');
+        console.log('========================');
         
-        // wlfans가 포함되어 있는지 확인 (더 유연한 매칭)
-        if (cleanCode.includes('WLFANS') || cleanCode === 'WLFANS') {
+        // 더 유연한 매칭 - 정확히 wlfans이거나 포함되어 있으면 인식
+        if (cleanCode === 'WLFANS' || cleanCode.includes('WLFANS') || 
+            code.toLowerCase().includes('wlfans') || code.toLowerCase() === 'wlfans') {
             const ok = this.addScan('WLFANS');
             if (ok) {
                 document.getElementById('scanCode').value = '';
