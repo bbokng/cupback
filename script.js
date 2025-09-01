@@ -465,25 +465,37 @@ class CupBackAppFirebase {
             startQrBtn.textContent = '🔄 스캔 중...';
             startQrBtn.disabled = true;
             
+            // QR Reader 영역을 먼저 보이게 설정
+            qrReader.style.display = 'block';
+            qrReader.style.minHeight = '300px';
+            qrReader.style.border = '2px solid #4CAF50';
+            qrReader.style.borderRadius = '8px';
+            qrReader.style.margin = '10px auto';
+            
             const html5QrCode = new Html5Qrcode("qrReader");
             
             // 카메라 설정 (후면 카메라 우선)
             const config = {
                 fps: 10,
                 qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
+                aspectRatio: 1.0,
+                disableFlip: false
             };
             
             // 사용 가능한 카메라 목록 가져오기
             const devices = await Html5Qrcode.getCameras();
+            console.log('사용 가능한 카메라:', devices);
+            
             let selectedCamera = null;
             
             // 후면 카메라 찾기
             for (const device of devices) {
+                console.log('카메라 확인:', device.label, device.id);
                 if (device.label.toLowerCase().includes('back') || 
                     device.label.toLowerCase().includes('rear') ||
                     device.label.toLowerCase().includes('후면')) {
                     selectedCamera = device.id;
+                    console.log('후면 카메라 선택:', device.label);
                     break;
                 }
             }
@@ -491,36 +503,42 @@ class CupBackAppFirebase {
             // 후면 카메라가 없으면 첫 번째 카메라 사용
             if (!selectedCamera && devices.length > 0) {
                 selectedCamera = devices[0].id;
+                console.log('첫 번째 카메라 선택:', devices[0].label);
             }
             
             if (!selectedCamera) {
                 this.showToast('카메라를 찾을 수 없습니다.', 'error');
                 startQrBtn.textContent = '📷 카메라로 스캔';
                 startQrBtn.disabled = false;
+                qrReader.style.display = 'none';
                 return;
             }
+            
+            console.log('선택된 카메라 ID:', selectedCamera);
             
             // QR 스캐너 시작
             await html5QrCode.start(
                 selectedCamera,
                 config,
                 (decodedText) => {
+                    console.log('QR 코드 스캔 성공:', decodedText);
                     this.handleScanCode(decodedText);
                     html5QrCode.stop();
                 },
                 (errorMessage) => {
                     // 스캔 오류는 무시 (정상적인 동작)
+                    console.log('QR 스캔 오류 (무시):', errorMessage);
                 }
             );
             
-            qrReader.style.display = 'block';
-            this.showToast('QR 스캐너가 시작되었습니다.', 'success');
+            this.showToast('QR 스캐너가 시작되었습니다. 카메라 화면을 확인하세요.', 'success');
             
         } catch (error) {
             console.error('QR 스캐너 시작 오류:', error);
             this.showToast('QR 스캐너를 시작할 수 없습니다: ' + error.message, 'error');
             startQrBtn.textContent = '📷 카메라로 스캔';
             startQrBtn.disabled = false;
+            qrReader.style.display = 'none';
         }
     }
 
