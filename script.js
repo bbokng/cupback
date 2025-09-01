@@ -237,38 +237,68 @@ class CupBackAppFirebase {
         }
 
         try {
+            console.log('게시글 작성 시작...');
+            console.log('현재 사용자:', this.currentUser.uid);
+            
             let imageUrl = null;
             
             // 이미지 업로드
             if (file) {
+                console.log('이미지 업로드 시작:', file.name);
                 const storageRef = firebase.storage().ref();
                 const imageRef = storageRef.child(`posts/${Date.now()}_${file.name}`);
                 const snapshot = await imageRef.put(file);
                 imageUrl = await snapshot.ref.getDownloadURL();
+                console.log('이미지 업로드 완료:', imageUrl);
             }
 
-            // 사용자 정보 가져오기
-            const userSnapshot = await this.db.collection('users')
-                .doc(this.currentUser.uid)
-                .get();
-            const userData = userSnapshot.data();
+            // 사용자 정보 가져오기 (Firebase Auth UID와 Firestore 문서 ID 모두 시도)
+            let userData = null;
+            
+            try {
+                // 먼저 Firebase Auth UID로 시도
+                const userSnapshot = await this.db.collection('users')
+                    .doc(this.currentUser.uid)
+                    .get();
+                
+                if (userSnapshot.exists) {
+                    userData = userSnapshot.data();
+                    console.log('Firebase Auth UID로 사용자 정보 찾음:', userData);
+                } else {
+                    // Firestore 문서 ID로 시도
+                    const usersSnapshot = await this.db.collection('users')
+                        .where('email', '==', this.currentUser.email)
+                        .get();
+                    
+                    if (!usersSnapshot.empty) {
+                        userData = usersSnapshot.docs[0].data();
+                        console.log('이메일로 사용자 정보 찾음:', userData);
+                    }
+                }
+            } catch (userError) {
+                console.error('사용자 정보 조회 오류:', userError);
+            }
 
             const newPost = {
                 title,
                 content,
                 image: imageUrl,
-                writer: userData.nickname || userData.name,
+                writer: userData ? (userData.nickname || userData.name || '익명') : '익명',
                 writerId: this.currentUser.uid,
                 likes: [],
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
+            console.log('새 게시글 데이터:', newPost);
+
             await this.db.collection('posts').add(newPost);
+            console.log('게시글 저장 완료');
+            
             this.showToast('게시글이 등록되었습니다.', 'success');
             return true;
         } catch (error) {
             console.error('게시글 작성 오류:', error);
-            this.showToast('게시글 작성 중 오류가 발생했습니다.', 'error');
+            this.showToast('게시글 작성 중 오류가 발생했습니다: ' + error.message, 'error');
             return false;
         }
     }
@@ -843,32 +873,53 @@ class CupBackAppFirebase {
     // 게시글 로드
     async loadPosts() {
         try {
+            console.log('게시글 로드 시작...');
             const posts = await this.getPosts();
             const postsContainer = document.getElementById('postsContainer');
             
-            if (!postsContainer) return;
+            console.log('로드된 게시글 수:', posts.length);
+            console.log('게시글 데이터:', posts);
             
-            if (posts.length === 0) {
-                postsContainer.innerHTML = '<p class="no-posts">아직 게시글이 없습니다.</p>';
+            if (!postsContainer) {
+                console.log('postsContainer 요소를 찾을 수 없습니다.');
                 return;
             }
             
-            postsContainer.innerHTML = posts.map(post => `
-                <div class="post-card">
-                    <div class="post-header">
-                        <span class="post-writer">${post.writer || '익명'}</span>
-                        <span class="post-date">${post.createdAt ? new Date(post.createdAt.toDate()).toLocaleDateString() : '방금 전'}</span>
+            if (posts.length === 0) {
+                postsContainer.innerHTML = `
+                    <div class="posts-empty">
+                        <div class="empty-icon">📝</div>
+                        <p>아직 게시글이 없습니다.</p>
+                        <p>첫 번째 게시글을 작성해보세요!</p>
                     </div>
-                    <h3 class="post-title">${post.title}</h3>
-                    <p class="post-content">${post.content}</p>
-                    ${post.image ? `<img src="${post.image}" alt="게시글 이미지" class="post-image">` : ''}
-                    <div class="post-actions">
-                        <button onclick="window.cupBackApp.toggleLike('${post.id}')" class="like-btn ${post.likes && post.likes.includes(window.cupBackApp.currentUser?.uid) ? 'liked' : ''}">
-                            ❤️ ${post.likes ? post.likes.length : 0}
-                        </button>
+                `;
+                return;
+            }
+            
+            postsContainer.innerHTML = posts.map(post => {
+                const postDate = post.createdAt ? 
+                    (post.createdAt.toDate ? new Date(post.createdAt.toDate()).toLocaleDateString() : 
+                     new Date(post.createdAt).toLocaleDateString()) : '방금 전';
+                
+                return `
+                    <div class="post-card">
+                        <div class="post-header">
+                            <span class="post-writer">${post.writer || '익명'}</span>
+                            <span class="post-date">${postDate}</span>
+                        </div>
+                        <h3 class="post-title">${post.title}</h3>
+                        <p class="post-content">${post.content}</p>
+                        ${post.image ? `<img src="${post.image}" alt="게시글 이미지" class="post-image">` : ''}
+                        <div class="post-actions">
+                            <button onclick="window.cupBackApp.toggleLike('${post.id}')" class="like-btn ${post.likes && post.likes.includes(window.cupBackApp.currentUser?.uid) ? 'liked' : ''}">
+                                ❤️ ${post.likes ? post.likes.length : 0}
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+            
+            console.log('게시글 로드 완료');
             
         } catch (error) {
             console.error('게시글 로드 오류:', error);

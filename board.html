@@ -130,5 +130,37 @@
     <!-- Firebase 설정 및 앱 스크립트 -->
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
+    <script>
+        // 게시글 작성 폼 이벤트 리스너
+        document.addEventListener('DOMContentLoaded', function() {
+            const postForm = document.getElementById('postForm');
+            
+            if (postForm) {
+                postForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const title = document.getElementById('postTitle').value;
+                    const content = document.getElementById('postContent').value;
+                    const imageFile = document.getElementById('postImage').files[0];
+                    
+                    if (!title || !content) {
+                        window.cupBackApp.showToast('제목과 내용을 모두 입력해주세요.', 'error');
+                        return;
+                    }
+                    
+                    // 게시글 작성
+                    const success = await window.cupBackApp.addPostWithImage(title, content, imageFile);
+                    
+                    if (success) {
+                        // 폼 초기화
+                        postForm.reset();
+                        
+                        // 게시글 목록 새로고침
+                        window.cupBackApp.loadPosts();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
