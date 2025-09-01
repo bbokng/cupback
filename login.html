@@ -178,6 +178,61 @@
                     }
                 });
             });
+
+            // 로그인 폼 이벤트 리스너
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+                    
+                    if (!username || !password) {
+                        window.cupBackApp.showToast('아이디와 비밀번호를 모두 입력해주세요.', 'error');
+                        return;
+                    }
+                    
+                    const success = await window.cupBackApp.login(username, password);
+                    if (success) {
+                        window.location.href = 'index.html';
+                    }
+                });
+            }
+
+            // 회원가입 폼 이벤트 리스너
+            const signupForm = document.getElementById('signupForm');
+            if (signupForm) {
+                signupForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const nickname = document.getElementById('nickname').value;
+                    const department = document.getElementById('department').value;
+                    const year = document.getElementById('year').value;
+                    const username = document.getElementById('signupUsername').value;
+                    const password = document.getElementById('signupPassword').value;
+                    
+                    if (!nickname || !department || !year || !username || !password) {
+                        window.cupBackApp.showToast('모든 필드를 입력해주세요.', 'error');
+                        return;
+                    }
+                    
+                    const userData = {
+                        nickname,
+                        department,
+                        year,
+                        username,
+                        password
+                    };
+                    
+                    const success = await window.cupBackApp.register(userData);
+                    if (success) {
+                        // 회원가입 성공 시 로그인 탭으로 이동
+                        document.querySelector('[data-tab="login"]').click();
+                        window.cupBackApp.showToast('회원가입이 완료되었습니다. 로그인해주세요.', 'success');
+                    }
+                });
+            }
         });
     </script>
 </body>
