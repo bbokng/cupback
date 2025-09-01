@@ -268,19 +268,21 @@ class CupBackApp {
     }
 
     handleScanCode(code) {
-        const VALID_CODES = ['WLFANS'];
+        // QR 코드 내용 정리 (공백, 줄바꿈, 특수문자 제거, 대소문자 구분 없이)
+        const cleanCode = code.trim().toUpperCase().replace(/[\r\n\t\s]/g, '');
         
-        // QR 코드 내용 정리 (공백 제거, 대소문자 구분 없이)
-        const cleanCode = code.trim().toUpperCase();
+        console.log('QR 코드 인식 내용:', code);
+        console.log('정리된 코드:', cleanCode);
         
-        if (VALID_CODES.includes(cleanCode)) {
-            const ok = this.addScan(cleanCode);
+        // wlfans가 포함되어 있는지 확인 (더 유연한 매칭)
+        if (cleanCode.includes('WLFANS') || cleanCode === 'WLFANS') {
+            const ok = this.addScan('WLFANS');
             if (ok) {
                 document.getElementById('scanCode').value = '';
                 this.showToast('컵 회수가 성공적으로 기록되었습니다! 🌱', 'success');
             }
         } else {
-            this.showToast(`유효하지 않은 QR 코드입니다. (인식된 코드: ${code})`, 'error');
+            this.showToast(`유효하지 않은 QR 코드입니다. (인식된 코드: "${code}")`, 'error');
         }
     }
 
