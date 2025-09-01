@@ -526,31 +526,68 @@ class CupBackAppFirebase {
 
     // QR 스캔 코드 처리
     async handleScanCode(code) {
-        console.log('스캔된 QR 코드:', code);
+        console.log('원본 스캔된 QR 코드:', code);
+        console.log('원본 코드 길이:', code.length);
         
-        // QR 코드 정리 (공백 제거, 대문자 변환, 줄바꿈 제거)
-        const cleanCode = code.trim().toUpperCase().replace(/[\r\n]/g, '');
+        // QR 코드 정리 (공백 제거, 대문자 변환, 줄바꿈 제거, 특수문자 제거)
+        const cleanCode = code.trim().toUpperCase().replace(/[\r\n]/g, '').replace(/[^A-Z0-9\-]/g, '');
         console.log('정리된 QR 코드:', cleanCode);
+        console.log('정리된 코드 길이:', cleanCode.length);
         
-        // 유효한 QR 코드 확인
+        // 유효한 QR 코드 확인 (더 유연한 매칭)
         const VALID_CODES = ['CUPBACK-2025', 'CUPBACK', 'WLFANS'];
         
         let isValid = false;
+        let matchedCode = '';
+        
+        // 1. 정확한 매칭 시도
         for (const validCode of VALID_CODES) {
-            if (cleanCode.includes(validCode) || cleanCode === validCode) {
+            if (cleanCode === validCode) {
                 isValid = true;
+                matchedCode = validCode;
+                console.log('정확한 매칭 성공:', validCode);
                 break;
             }
         }
         
+        // 2. 포함 관계 매칭 시도
+        if (!isValid) {
+            for (const validCode of VALID_CODES) {
+                if (cleanCode.includes(validCode) || validCode.includes(cleanCode)) {
+                    isValid = true;
+                    matchedCode = validCode;
+                    console.log('포함 관계 매칭 성공:', validCode);
+                    break;
+                }
+            }
+        }
+        
+        // 3. 부분 매칭 시도 (CUPBACK이 포함된 경우)
+        if (!isValid && cleanCode.includes('CUPBACK')) {
+            isValid = true;
+            matchedCode = 'CUPBACK-2025';
+            console.log('CUPBACK 부분 매칭 성공');
+        }
+        
+        // 4. 디버깅을 위한 모든 매칭 시도 로그
+        console.log('매칭 결과:', {
+            isValid: isValid,
+            matchedCode: matchedCode,
+            cleanCode: cleanCode,
+            validCodes: VALID_CODES
+        });
+        
         if (!isValid) {
             this.showToast('유효하지 않은 QR 코드입니다: ' + cleanCode, 'error');
+            console.log('QR 코드 매칭 실패 - 모든 시도 후에도 유효하지 않음');
             return false;
         }
         
         // 스캔 성공 처리
-        const success = await this.addScan(cleanCode);
+        const success = await this.addScan(matchedCode);
         if (success) {
+            this.showToast('QR 코드 인식 성공! 컵이 회수되었습니다.', 'success');
+            
             // QR 스캐너 정리
             const qrReader = document.getElementById('qrReader');
             const startQrBtn = document.getElementById('startQrBtn');
