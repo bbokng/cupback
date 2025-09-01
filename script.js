@@ -422,8 +422,251 @@ class CupBackAppFirebase {
         }
     }
 
-    // 기존 페이지 초기화 메서드들과 동일 (QR 스캔, 대시보드, 게시판, 랭킹, 로그인)
-    // ... (기존 코드와 동일하지만 Firebase 메서드 사용)
+    // QR 스캔 페이지 초기화
+    initScanPage() {
+        const startQrBtn = document.getElementById('startQrBtn');
+        const qrReader = document.getElementById('qrReader');
+        const scanForm = document.getElementById('scanForm');
+        
+        if (startQrBtn) {
+            startQrBtn.addEventListener('click', () => {
+                this.startQrScanner();
+            });
+        }
+        
+        if (scanForm) {
+            scanForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const code = document.getElementById('scanCode').value;
+                if (code) {
+                    await this.handleScanCode(code);
+                }
+            });
+        }
+        
+        // 오늘 통계 업데이트
+        this.updateStats();
+    }
+
+    // QR 스캐너 시작
+    async startQrScanner() {
+        const startQrBtn = document.getElementById('startQrBtn');
+        const qrReader = document.getElementById('qrReader');
+        
+        if (!qrReader) return;
+        
+        try {
+            // HTML5-QRCode 라이브러리 로드 확인
+            if (typeof Html5Qrcode === 'undefined') {
+                this.showToast('QR 스캔 라이브러리를 로드할 수 없습니다.', 'error');
+                return;
+            }
+            
+            startQrBtn.textContent = '🔄 스캔 중...';
+            startQrBtn.disabled = true;
+            
+            const html5QrCode = new Html5Qrcode("qrReader");
+            
+            // 카메라 설정 (후면 카메라 우선)
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+            
+            // 사용 가능한 카메라 목록 가져오기
+            const devices = await Html5Qrcode.getCameras();
+            let selectedCamera = null;
+            
+            // 후면 카메라 찾기
+            for (const device of devices) {
+                if (device.label.toLowerCase().includes('back') || 
+                    device.label.toLowerCase().includes('rear') ||
+                    device.label.toLowerCase().includes('후면')) {
+                    selectedCamera = device.id;
+                    break;
+                }
+            }
+            
+            // 후면 카메라가 없으면 첫 번째 카메라 사용
+            if (!selectedCamera && devices.length > 0) {
+                selectedCamera = devices[0].id;
+            }
+            
+            if (!selectedCamera) {
+                this.showToast('카메라를 찾을 수 없습니다.', 'error');
+                startQrBtn.textContent = '📷 카메라로 스캔';
+                startQrBtn.disabled = false;
+                return;
+            }
+            
+            // QR 스캐너 시작
+            await html5QrCode.start(
+                selectedCamera,
+                config,
+                (decodedText) => {
+                    this.handleScanCode(decodedText);
+                    html5QrCode.stop();
+                },
+                (errorMessage) => {
+                    // 스캔 오류는 무시 (정상적인 동작)
+                }
+            );
+            
+            qrReader.style.display = 'block';
+            this.showToast('QR 스캐너가 시작되었습니다.', 'success');
+            
+        } catch (error) {
+            console.error('QR 스캐너 시작 오류:', error);
+            this.showToast('QR 스캐너를 시작할 수 없습니다: ' + error.message, 'error');
+            startQrBtn.textContent = '📷 카메라로 스캔';
+            startQrBtn.disabled = false;
+        }
+    }
+
+    // QR 스캔 코드 처리
+    async handleScanCode(code) {
+        console.log('스캔된 QR 코드:', code);
+        
+        // QR 코드 정리 (공백 제거, 대문자 변환, 줄바꿈 제거)
+        const cleanCode = code.trim().toUpperCase().replace(/[\r\n]/g, '');
+        console.log('정리된 QR 코드:', cleanCode);
+        
+        // 유효한 QR 코드 확인
+        const VALID_CODES = ['CUPBACK-2025', 'CUPBACK', 'WLFANS'];
+        
+        let isValid = false;
+        for (const validCode of VALID_CODES) {
+            if (cleanCode.includes(validCode) || cleanCode === validCode) {
+                isValid = true;
+                break;
+            }
+        }
+        
+        if (!isValid) {
+            this.showToast('유효하지 않은 QR 코드입니다: ' + cleanCode, 'error');
+            return false;
+        }
+        
+        // 스캔 성공 처리
+        const success = await this.addScan(cleanCode);
+        if (success) {
+            // QR 스캐너 정리
+            const qrReader = document.getElementById('qrReader');
+            const startQrBtn = document.getElementById('startQrBtn');
+            
+            if (qrReader) {
+                qrReader.style.display = 'none';
+                qrReader.innerHTML = '';
+            }
+            
+            if (startQrBtn) {
+                startQrBtn.textContent = '📷 카메라로 스캔';
+                startQrBtn.disabled = false;
+            }
+        }
+        
+        return success;
+    }
+
+    // 대시보드 페이지 초기화
+    initDashboardPage() {
+        this.updateStats();
+    }
+
+    // 게시판 페이지 초기화
+    initBoardPage() {
+        this.loadPosts();
+    }
+
+    // 랭킹 페이지 초기화
+    initRankingPage() {
+        this.loadRankings();
+    }
+
+    // 로그인 페이지 초기화
+    initLoginPage() {
+        // 로그인 페이지는 별도 스크립트에서 처리
+    }
+
+    // 게시글 로드
+    async loadPosts() {
+        try {
+            const posts = await this.getPosts();
+            const postsContainer = document.getElementById('postsContainer');
+            
+            if (!postsContainer) return;
+            
+            if (posts.length === 0) {
+                postsContainer.innerHTML = '<p class="no-posts">아직 게시글이 없습니다.</p>';
+                return;
+            }
+            
+            postsContainer.innerHTML = posts.map(post => `
+                <div class="post-card">
+                    <div class="post-header">
+                        <span class="post-writer">${post.writer || '익명'}</span>
+                        <span class="post-date">${post.createdAt ? new Date(post.createdAt.toDate()).toLocaleDateString() : '방금 전'}</span>
+                    </div>
+                    <h3 class="post-title">${post.title}</h3>
+                    <p class="post-content">${post.content}</p>
+                    ${post.image ? `<img src="${post.image}" alt="게시글 이미지" class="post-image">` : ''}
+                    <div class="post-actions">
+                        <button onclick="window.cupBackApp.toggleLike('${post.id}')" class="like-btn ${post.likes && post.likes.includes(window.cupBackApp.currentUser?.uid) ? 'liked' : ''}">
+                            ❤️ ${post.likes ? post.likes.length : 0}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+        } catch (error) {
+            console.error('게시글 로드 오류:', error);
+        }
+    }
+
+    // 랭킹 로드
+    async loadRankings() {
+        try {
+            const rankings = await this.getRankings();
+            const personalRankingEl = document.getElementById('personalRanking');
+            const departmentRankingEl = document.getElementById('departmentRanking');
+            
+            if (personalRankingEl) {
+                personalRankingEl.innerHTML = rankings.personalRanking.map((user, index) => `
+                    <div class="ranking-item">
+                        <div class="ranking-number">${index + 1}</div>
+                        <div class="ranking-info">
+                            <div class="ranking-name">${user.nickname || user.name || '익명'}</div>
+                            <div class="ranking-dept">${user.department}</div>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="ranking-cups">${user.totalCups}개</div>
+                            <div class="ranking-co2">${user.totalCO2}g</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            if (departmentRankingEl) {
+                departmentRankingEl.innerHTML = rankings.departmentRanking.map((dept, index) => `
+                    <div class="ranking-item">
+                        <div class="ranking-number">${index + 1}</div>
+                        <div class="ranking-info">
+                            <div class="ranking-name">${dept.department}</div>
+                            <div class="ranking-users">${dept.totalUsers}명 참여</div>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="ranking-cups">${dept.totalCups}개</div>
+                            <div class="ranking-co2">${dept.totalCO2}g</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+        } catch (error) {
+            console.error('랭킹 로드 오류:', error);
+        }
+    }
 }
 
 // 앱 초기화
