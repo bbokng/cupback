@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 & 회원가입 - CupBack</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>CupBack</h1>
+                <span class="tagline">컵 하나가 지구를 바꿉니다</span>
+            </div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="scan.html" class="nav-link">스캔</a>
+                <a href="dashboard.html" class="nav-link">대시보드</a>
+                <a href="board.html" class="nav-link">게시판</a>
+                <a href="ranking.html" class="nav-link">랭킹</a>
+                <a href="login.html" class="nav-link active" id="loginBtn">로그인</a>
+                <span class="nav-link user-info" id="userInfo" style="display: none;"></span>
+                <button class="nav-link logout-btn" id="logoutBtn" style="display: none;">로그아웃</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+        <div class="container">
+            <!-- 탭 버튼 -->
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login">로그인</button>
+                <button class="tab-btn" data-tab="signup">회원가입</button>
+            </div>
+
+            <!-- 로그인 폼 -->
+            <div class="auth-container" id="loginContainer">
+                <div class="auth-card">
+                    <h2 class="auth-title">로그인</h2>
+                    <p class="auth-subtitle">CupBack에 로그인하여 친환경 활동에 참여하세요</p>
+                    
+                    <form id="loginForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="username" class="form-label">아이디</label>
+                            <input type="text" id="username" name="username" class="form-input" 
+                                   placeholder="아이디를 입력하세요" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">비밀번호</label>
+                            <input type="password" id="password" name="password" class="form-input" 
+                                   placeholder="비밀번호를 입력하세요" required>
+                        </div>
+                        
+                        <button type="submit" class="auth-btn primary">로그인</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 회원가입 폼 -->
+            <div class="auth-container" id="signupContainer" style="display: none;">
+                <div class="auth-card">
+                    <h2 class="auth-title">회원가입</h2>
+                    <p class="auth-subtitle">CupBack에 가입하여 친환경 활동에 참여하세요</p>
+                    
+                    <form id="signupForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="nickname" class="form-label">닉네임 *</label>
+                            <input type="text" id="nickname" name="nickname" class="form-input" 
+                                   placeholder="닉네임을 입력하세요" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="department" class="form-label">학과 *</label>
+                            <select id="department" name="department" class="form-input" required>
+                                <option value="">학과를 선택하세요</option>
+                                <option value="신학과">신학과</option>
+                                <option value="기독교교육상담학과">기독교교육상담학과</option>
+                                <option value="문화선교학과">문화선교학과</option>
+                                <option value="국어국문학과">국어국문학과</option>
+                                <option value="영어영문학과">영어영문학과</option>
+                                <option value="중어중문학과">중어중문학과</option>
+                                <option value="국제개발협력학과">국제개발협력학과</option>
+                                <option value="사회복지학과">사회복지학과</option>
+                                <option value="행정학과">행정학과</option>
+                                <option value="관광개발학과">관광개발학과</option>
+                                <option value="경영학과">경영학과</option>
+                                <option value="글로벌물류학과">글로벌물류학과</option>
+                                <option value="산업경영학과">산업경영학과</option>
+                                <option value="유아교육과">유아교육과</option>
+                                <option value="체육교육과">체육교육과</option>
+                                <option value="컴퓨터교육과">컴퓨터교육과</option>
+                                <option value="정보통신공학과">정보통신공학과</option>
+                                <option value="미디어소프트웨어학과">미디어소프트웨어학과</option>
+                                <option value="도시디자인정보학과">도시디자인정보학과</option>
+                                <option value="음악학부">음악학부</option>
+                                <option value="연극영화학부">연극영화학부</option>
+                                <option value="뷰티디자인학과">뷰티디자인학과</option>
+                                <option value="공연음악예술학부">공연음악예술학부</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="year" class="form-label">학년 *</label>
+                            <select id="year" name="year" class="form-input" required>
+                                <option value="">학년을 선택하세요</option>
+                                <option value="1">1학년</option>
+                                <option value="2">2학년</option>
+                                <option value="3">3학년</option>
+                                <option value="4">4학년</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="signupUsername" class="form-label">아이디 *</label>
+                            <input type="text" id="signupUsername" name="username" class="form-input" 
+                                   placeholder="3자 이상의 아이디를 입력하세요" minlength="3" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="signupPassword" class="form-label">비밀번호 *</label>
+                            <input type="password" id="signupPassword" name="password" class="form-input" 
+                                   placeholder="4자 이상의 비밀번호를 입력하세요" minlength="4" required>
+                        </div>
+                        
+                        <button type="submit" class="auth-btn primary">회원가입</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CupBack. 지구를 위한 작은 실천을 응원합니다.</p>
+        </div>
+    </footer>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+    <script>
+        // 탭 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const loginContainer = document.getElementById('loginContainer');
+            const signupContainer = document.getElementById('signupContainer');
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetTab = this.dataset.tab;
+                    
+                    // 탭 버튼 활성화
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 컨테이너 표시/숨김
+                    if (targetTab === 'login') {
+                        loginContainer.style.display = 'block';
+                        signupContainer.style.display = 'none';
+                    } else {
+                        loginContainer.style.display = 'none';
+                        signupContainer.style.display = 'block';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

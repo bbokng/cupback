@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판 - CupBack</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>CupBack</h1>
+                <span class="tagline">컵 하나가 지구를 바꿉니다</span>
+            </div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="scan.html" class="nav-link">스캔</a>
+                <a href="dashboard.html" class="nav-link">대시보드</a>
+                <a href="board.html" class="nav-link active">게시판</a>
+                <a href="ranking.html" class="nav-link">랭킹</a>
+                <a href="login.html" class="nav-link" id="loginBtn">로그인</a>
+                <span class="nav-link user-info" id="userInfo" style="display: none;"></span>
+                <button class="nav-link logout-btn" id="logoutBtn" style="display: none;">로그아웃</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+        <div class="container">
+            <div class="board-container">
+                <div class="board-header">
+                    <h2 class="board-title">친환경 게시판</h2>
+                    <p class="board-subtitle">자신의 컵빽을 인증하세요! 추첨을 통해 생협쿠폰을 드립니다!</p>
+                </div>
+
+                <!-- 게시글 작성 폼 -->
+                <section class="board-section">
+                    <h3 class="section-title">새 글 작성</h3>
+                    <div class="post-form-card">
+                        <form id="postForm" class="post-form">
+                            <div class="form-group">
+                                <label for="postImage" class="form-label">사진 업로드</label>
+                                <input type="file" id="postImage" name="postImage" class="form-input" accept="image/*">
+                                <span class="form-help">최대 1장, JPG/PNG 권장</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="postTitle" class="form-label">제목</label>
+                                <input type="text" id="postTitle" name="postTitle" class="form-input" 
+                                       placeholder="제목을 입력하세요" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="postContent" class="form-label">내용</label>
+                                <textarea id="postContent" name="postContent" class="form-textarea" 
+                                          placeholder="인증샷과 함께 오늘의 컵빽을 공유해주세요" rows="5" required></textarea>
+                            </div>
+                            
+                            <button type="submit" class="post-btn primary">
+                                <span class="icon">📤</span>
+                                업로드
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 게시글 목록 -->
+                <section class="board-section">
+                    <h3 class="section-title">최신 게시글</h3>
+                    <div class="posts-container" id="postsContainer">
+                        <!-- 게시글이 여기에 동적으로 로드됩니다 -->
+                        <div class="posts-empty">
+                            <div class="empty-icon">📝</div>
+                            <p>아직 게시글이 없습니다.</p>
+                            <p>첫 번째 게시글을 작성해보세요!</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 게시판 안내 -->
+                <section class="board-section">
+                    <h3 class="section-title">게시판 이용 안내</h3>
+                    <div class="board-guide">
+                        <div class="guide-item">
+                            <div class="guide-icon">💬</div>
+                            <div class="guide-content">
+                                <h4>자유로운 소통</h4>
+                                <p>친환경 활동에 대한 경험담, 팁, 질문 등을 자유롭게 공유하세요</p>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-icon">🤝</div>
+                            <div class="guide-content">
+                                <h4>상호 존중</h4>
+                                <p>다른 사용자의 의견을 존중하고 건설적인 토론을 이어가세요</p>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-icon">🌱</div>
+                            <div class="guide-content">
+                                <h4>친환경 주제</h4>
+                                <p>지구를 위한 작은 실천과 관련된 내용으로 작성해주세요</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CupBack. 지구를 위한 작은 실천을 응원합니다.</p>
+        </div>
+    </footer>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

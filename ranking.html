@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랭킹 - CupBack</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>CupBack</h1>
+                <span class="tagline">컵 하나가 지구를 바꿉니다</span>
+            </div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="scan.html" class="nav-link">스캔</a>
+                <a href="dashboard.html" class="nav-link">대시보드</a>
+                <a href="board.html" class="nav-link">게시판</a>
+                <a href="ranking.html" class="nav-link active">랭킹</a>
+                <a href="login.html" class="nav-link" id="loginBtn">로그인</a>
+                <span class="nav-link user-info" id="userInfo" style="display: none;"></span>
+                <button class="nav-link logout-btn" id="logoutBtn" style="display: none;">로그아웃</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+        <div class="container">
+            <div class="ranking-container">
+                <div class="ranking-header">
+                    <h2 class="ranking-title">친환경 랭킹</h2>
+                    <p class="ranking-subtitle">우리 모두의 친환경 기여도를 확인하고 동기부여를 받아보세요</p>
+                </div>
+
+                <!-- 개인 랭킹 -->
+                <section class="ranking-section">
+                    <h3 class="section-title">개인 랭킹</h3>
+                    <div class="ranking-tabs">
+                        <button class="tab-btn active" data-tab="personal">개인 순위</button>
+                        <button class="tab-btn" data-tab="department">학과 순위</button>
+                    </div>
+                    
+                    <div class="ranking-content" id="personalRanking">
+                        <!-- 개인 랭킹이 여기에 동적으로 로드됩니다 -->
+                        <div class="ranking-empty">
+                            <div class="empty-icon">🏆</div>
+                            <p>아직 랭킹 데이터가 없습니다.</p>
+                            <p>첫 번째 컵을 회수해보세요!</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 학과 랭킹 -->
+                <section class="ranking-section" style="display: none;">
+                    <h3 class="section-title">학과 랭킹</h3>
+                    <div class="ranking-content" id="departmentRanking">
+                        <!-- 학과 랭킹이 여기에 동적으로 로드됩니다 -->
+                        <div class="ranking-empty">
+                            <div class="empty-icon">🎓</div>
+                            <p>아직 학과 랭킹 데이터가 없습니다.</p>
+                            <p>더 많은 학생들이 참여해보세요!</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 랭킹 안내 -->
+                <section class="ranking-section">
+                    <h3 class="section-title">랭킹 시스템 안내</h3>
+                    <div class="ranking-guide">
+                        <div class="guide-item">
+                            <div class="guide-icon">🥇</div>
+                            <div class="guide-content">
+                                <h4>1위 - 금메달</h4>
+                                <p>가장 많은 컵을 회수한 개인/학과</p>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-icon">🥈</div>
+                            <div class="guide-content">
+                                <h4>2위 - 은메달</h4>
+                                <p>두 번째로 많은 컵을 회수한 개인/학과</p>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-icon">🥉</div>
+                            <div class="guide-content">
+                                <h4>3위 - 동메달</h4>
+                                <p>세 번째로 많은 컵을 회수한 개인/학과</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 동기부여 메시지 -->
+                <section class="ranking-section">
+                    <div class="motivation-card">
+                        <div class="motivation-icon">💪</div>
+                        <div class="motivation-content">
+                            <h3>매일 참여하면 랭킹이 올라갑니다!</h3>
+                            <p>하루에 한 번씩 컵을 회수하여 친환경 활동에 기여하고,<br>
+                            개인과 학과의 랭킹을 높여보세요.</p>
+                            <a href="scan.html" class="motivation-btn primary">
+                                <span class="icon">☕</span>
+                                지금 컵 회수하기
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CupBack. 지구를 위한 작은 실천을 응원합니다.</p>
+        </div>
+    </footer>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+    <script>
+        // 탭 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const rankingSections = document.querySelectorAll('.ranking-section');
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetTab = this.dataset.tab;
+                    
+                    // 탭 버튼 활성화
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 섹션 표시/숨김
+                    if (targetTab === 'personal') {
+                        document.getElementById('personalRanking').parentElement.style.display = 'block';
+                        document.getElementById('departmentRanking').parentElement.style.display = 'none';
+                    } else {
+                        document.getElementById('personalRanking').parentElement.style.display = 'none';
+                        document.getElementById('departmentRanking').parentElement.style.display = 'block';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

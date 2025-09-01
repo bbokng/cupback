@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대시보드 - CupBack</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>CupBack</h1>
+                <span class="tagline">컵 하나가 지구를 바꿉니다</span>
+            </div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="scan.html" class="nav-link">스캔</a>
+                <a href="dashboard.html" class="nav-link active">대시보드</a>
+                <a href="board.html" class="nav-link">게시판</a>
+                <a href="ranking.html" class="nav-link">랭킹</a>
+                <a href="login.html" class="nav-link" id="loginBtn">로그인</a>
+                <span class="nav-link user-info" id="userInfo" style="display: none;"></span>
+                <button class="nav-link logout-btn" id="logoutBtn" style="display: none;">로그아웃</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+        <div class="container">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <h2 class="dashboard-title">내 친환경 대시보드</h2>
+                    <p class="dashboard-subtitle">나의 기여도와 전체 성과를 한눈에 확인하세요</p>
+                </div>
+
+                <!-- 개인 통계 -->
+                <section class="dashboard-section">
+                    <h3 class="section-title">나의 통계</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">☕</div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="userTotal">0</div>
+                                <div class="stat-label">총 회수한 컵</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📅</div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="userToday">0</div>
+                                <div class="stat-label">오늘 회수한 컵</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🌱</div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="userCO2">0</div>
+                                <div class="stat-label">절약한 CO₂(g)</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 진행률 링 -->
+                <section class="dashboard-section">
+                    <h3 class="section-title">전체 기여도</h3>
+                    <div class="progress-card">
+                        <div class="progress-info">
+                            <h4>전체 회수량 대비 내 기여도</h4>
+                            <p>여러분의 작은 실천이 모여 큰 변화를 만들어갑니다</p>
+                        </div>
+                        <div class="progress-ring">
+                            <div class="progress-circle">
+                                <span class="progress-percentage" id="progressPercentage">0</span>%
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 전체 성과 -->
+                <section class="dashboard-section">
+                    <h3 class="section-title">전체 성과</h3>
+                    <div class="overall-stats">
+                        <div class="overall-stat">
+                            <div class="overall-icon">🏆</div>
+                            <div class="overall-content">
+                                <div class="overall-number" id="totalCups">0</div>
+                                <div class="overall-label">총 회수된 컵</div>
+                            </div>
+                        </div>
+                        <div class="overall-stat">
+                            <div class="overall-icon">🌍</div>
+                            <div class="overall-content">
+                                <div class="overall-number" id="totalCO2">0</div>
+                                <div class="overall-label">총 절약된 CO₂(g)</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 빠른 액션 -->
+                <section class="dashboard-section">
+                    <h3 class="section-title">빠른 액션</h3>
+                    <div class="action-buttons">
+                        <a href="scan.html" class="action-btn primary">
+                            <span class="icon">☕</span>
+                            컵 회수하기
+                        </a>
+                        <a href="ranking.html" class="action-btn secondary">
+                            <span class="icon">🏆</span>
+                            랭킹 확인하기
+                        </a>
+                    </div>
+                </section>
+
+                <!-- 성과 히스토리 -->
+                <section class="dashboard-section">
+                    <h3 class="section-title">최근 활동</h3>
+                    <div class="activity-list" id="activityList">
+                        <div class="activity-item">
+                            <div class="activity-icon">☕</div>
+                            <div class="activity-content">
+                                <div class="activity-title">컵 회수 완료</div>
+                                <div class="activity-time">오늘</div>
+                            </div>
+                        </div>
+                        <div class="activity-empty">
+                            <p>아직 활동 내역이 없습니다.</p>
+                            <p>첫 번째 컵을 회수해보세요!</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CupBack. 지구를 위한 작은 실천을 응원합니다.</p>
+        </div>
+    </footer>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

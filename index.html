@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CupBack - 친환경 컵 회수 플랫폼</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>CupBack</h1>
+                <span class="tagline">컵 하나가 지구를 바꿉니다</span>
+            </div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link active">홈</a>
+                <a href="scan.html" class="nav-link">스캔</a>
+                <a href="dashboard.html" class="nav-link">대시보드</a>
+                <a href="board.html" class="nav-link">게시판</a>
+                <a href="ranking.html" class="nav-link">랭킹</a>
+                <a href="login.html" class="nav-link" id="loginBtn">로그인</a>
+                <span class="nav-link user-info" id="userInfo" style="display: none;"></span>
+                <button class="nav-link logout-btn" id="logoutBtn" style="display: none;">로그아웃</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+        <!-- 히어로 섹션 -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h2 class="hero-title">교내 플라스틱 컵 문제를<br>함께 해결해요</h2>
+                    <p class="hero-description">
+                        QR 스캔으로 간편하게 컵을 회수하고,<br>
+                        실시간으로 우리의 친환경 성과를 확인하세요
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalCups">0</span>
+                            <span class="stat-label">총 회수 컵</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalCO2">0</span>
+                            <span class="stat-label">CO₂ 절감량(g)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalUsers">0</span>
+                            <span class="stat-label">참여 인원</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 빠른 액션 섹션 -->
+        <section class="quick-actions">
+            <div class="container">
+                <h3 class="section-title">빠른 시작</h3>
+                <div class="action-buttons">
+                    <a href="scan.html" class="action-btn primary">
+                        <span class="icon">📱</span>
+                        컵 회수하기
+                    </a>
+                    <a href="dashboard.html" class="action-btn secondary">
+                        <span class="icon">📊</span>
+                        성과 확인하기
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 오늘 하이라이트 -->
+        <section class="today-highlight">
+            <div class="container">
+                <h3 class="section-title">오늘의 성과</h3>
+                <div class="highlight-card">
+                    <div class="highlight-content">
+                        <h4>오늘 <span id="todayCups">0</span>개의 컵이 자연으로 돌아갔어요!</h4>
+                        <p>여러분의 작은 실천이 모여 큰 변화를 만들어갑니다.</p>
+                    </div>
+                    <div class="highlight-visual">
+                        <div class="cup-animation">☕</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 참여 방법 안내 -->
+        <section class="how-to">
+            <div class="container">
+                <h3 class="section-title">참여 방법</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h4>회원가입</h4>
+                        <p>간단한 정보로 계정을 만드세요</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h4>컵 회수</h4>
+                        <p>QR 코드를 스캔하거나 수동으로 입력하세요</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h4>성과 확인</h4>
+                        <p>실시간으로 개인과 전체 성과를 확인하세요</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CupBack. 지구를 위한 작은 실천을 응원합니다.</p>
+        </div>
+    </footer>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

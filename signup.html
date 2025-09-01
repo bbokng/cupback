@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - CupBack</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>CupBack</h1>
+                <span class="tagline">컵 하나가 지구를 바꿉니다</span>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link">홈</a>
+                <a href="/scan" class="nav-link">스캔</a>
+                <a href="/dashboard" class="nav-link">대시보드</a>
+                <a href="/board" class="nav-link">게시판</a>
+                <a href="/ranking" class="nav-link">랭킹</a>
+                <a href="/login" class="nav-link" id="loginBtn">로그인</a>
+                <span class="nav-link user-info" id="userInfo" style="display: none;"></span>
+                <button class="nav-link logout-btn" id="logoutBtn" style="display: none;">로그아웃</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <h2 class="auth-title">회원가입</h2>
+                    <p class="auth-subtitle">CupBack에 가입하여 친환경 활동에 참여하세요</p>
+                    
+                    <form id="signupForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="name" class="form-label">이름 *</label>
+                            <input type="text" id="name" name="name" class="form-input" 
+                                   placeholder="이름을 입력하세요" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="studentId" class="form-label">학번 *</label>
+                            <input type="text" id="studentId" name="studentId" class="form-input" 
+                                   placeholder="학번을 입력하세요" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="department" class="form-label">학과 *</label>
+                            <select id="department" name="department" class="form-input" required>
+                                <option value="">학과를 선택하세요</option>
+                                <option value="컴퓨터공학과">컴퓨터공학과</option>
+                                <option value="전자공학과">전자공학과</option>
+                                <option value="기계공학과">기계공학과</option>
+                                <option value="화학공학과">화학공학과</option>
+                                <option value="건축학과">건축학과</option>
+                                <option value="경영학과">경영학과</option>
+                                <option value="경제학과">경제학과</option>
+                                <option value="문학과">문학과</option>
+                                <option value="사학과">사학과</option>
+                                <option value="철학과">철학과</option>
+                                <option value="수학과">수학과</option>
+                                <option value="물리학과">물리학과</option>
+                                <option value="화학과">화학과</option>
+                                <option value="생물학과">생물학과</option>
+                                <option value="지구과학과">지구과학과</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="year" class="form-label">학년 *</label>
+                            <select id="year" name="year" class="form-input" required>
+                                <option value="">학년을 선택하세요</option>
+                                <option value="1">1학년</option>
+                                <option value="2">2학년</option>
+                                <option value="3">3학년</option>
+                                <option value="4">4학년</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="username" class="form-label">아이디 *</label>
+                            <input type="text" id="username" name="username" class="form-input" 
+                                   placeholder="3자 이상의 아이디를 입력하세요" minlength="3" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">비밀번호 *</label>
+                            <input type="password" id="password" name="password" class="form-input" 
+                                   placeholder="4자 이상의 비밀번호를 입력하세요" minlength="4" required>
+                        </div>
+                        
+                        <button type="submit" class="auth-btn primary">회원가입</button>
+                    </form>
+                    
+                    <div class="auth-links">
+                        <p>이미 계정이 있으신가요? <a href="/login" class="link">로그인</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CupBack. 지구를 위한 작은 실천을 응원합니다.</p>
+        </div>
+    </footer>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

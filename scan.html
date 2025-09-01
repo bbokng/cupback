@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>컵 회수 - CupBack</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>CupBack</h1>
+                <span class="tagline">컵 하나가 지구를 바꿉니다</span>
+            </div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="scan.html" class="nav-link active">스캔</a>
+                <a href="dashboard.html" class="nav-link">대시보드</a>
+                <a href="board.html" class="nav-link">게시판</a>
+                <a href="ranking.html" class="nav-link">랭킹</a>
+                <a href="login.html" class="nav-link" id="loginBtn">로그인</a>
+                <span class="nav-link user-info" id="userInfo" style="display: none;"></span>
+                <button class="nav-link logout-btn" id="logoutBtn" style="display: none;">로그아웃</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+        <div class="container">
+            <div class="scan-container">
+                <div class="scan-header">
+                    <h2 class="scan-title">컵 회수하기</h2>
+                    <p class="scan-subtitle">QR 코드를 스캔하거나 수동으로 코드를 입력하여 컵을 회수하세요</p>
+                </div>
+
+                <div class="scan-card">
+                    <div class="scan-info">
+                        <div class="info-icon">📱</div>
+                        <h3>개발 단계 안내</h3>
+                        <p>현재는 개발 단계로 고정 코드를 사용합니다.<br>
+                        배포 시에는 카메라로 QR 코드를 스캔할 수 있습니다.</p>
+                    </div>
+
+                    <!-- QR 스캔 영역 -->
+                    <div class="form-group" style="text-align:center;">
+                        <button type="button" id="startQrBtn" class="scan-btn" style="max-width:480px; margin:0 auto 1rem auto;">📷 카메라로 스캔</button>
+                        <div id="qrReader" style="width:100%; max-width:480px; margin:0 auto; display:none;"></div>
+                        <small class="form-help">모바일에서 HTTPS 환경에서만 카메라 접근이 가능합니다.</small>
+                    </div>
+
+                    <!-- 수동 입력 폼 -->
+                    <form id="scanForm" class="scan-form">
+                        <div class="form-group">
+                            <label for="scanCode" class="form-label">회수 코드</label>
+                            <input type="text" id="scanCode" name="scanCode" class="form-input" 
+                                   placeholder="예: CUPBACK-FINAL-ONE" required>
+                            <small class="form-help">개발용 고정 코드: CUPBACK-FINAL-ONE</small>
+                        </div>
+                        
+                        <button type="submit" class="scan-btn primary">
+                            <span class="icon">☕</span>
+                            컵 회수하기
+                        </button>
+                    </form>
+
+                    <div class="scan-tips">
+                        <h4>💡 참여 팁</h4>
+                        <ul>
+                            <li>하루에 한 번만 적립할 수 있습니다</li>
+                            <li>컵 1개당 30g의 CO₂를 절약합니다</li>
+                            <li>매일 참여하면 랭킹에서 좋은 성적을 거둘 수 있습니다</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="scan-stats">
+                    <h3>오늘의 성과</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">☕</div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="todayCups">0</div>
+                                <div class="stat-label">오늘 회수된 컵</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🌱</div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="todayCO2">0</div>
+                                <div class="stat-label">오늘 절약된 CO₂(g)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CupBack. 지구를 위한 작은 실천을 응원합니다.</p>
+        </div>
+    </footer>
+
+    <!-- 토스트 메시지 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- QR 라이브러리 -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="script.js"></script>
+</body>
+</html>
