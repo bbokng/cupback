@@ -135,10 +135,14 @@
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
     <script>
-        // 탭 기능
+        // 탭 기능 및 랭킹 데이터 로드
         document.addEventListener('DOMContentLoaded', function() {
             const tabBtns = document.querySelectorAll('.tab-btn');
-            const rankingSections = document.querySelectorAll('.ranking-section');
+            
+            // 랭킹 데이터 로드
+            if (window.cupBackApp) {
+                window.cupBackApp.loadRankings();
+            }
             
             tabBtns.forEach(btn => {
                 btn.addEventListener('click', function() {

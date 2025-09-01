@@ -319,25 +319,66 @@ class CupBackAppFirebase {
     // 랭킹
     async getRankings() {
         try {
+            console.log('랭킹 데이터 조회 시작...');
+            
             const usersSnapshot = await this.db.collection('users').get();
             const scansSnapshot = await this.db.collection('scans').get();
             
-            const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const scans = scansSnapshot.docs.map(doc => doc.data());
+            const users = usersSnapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                uid: doc.id, // Firebase 문서 ID를 uid로도 저장
+                ...doc.data() 
+            }));
+            const scans = scansSnapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data() 
+            }));
             
-            // 개인 랭킹
+            console.log('사용자 수:', users.length);
+            console.log('스캔 기록 수:', scans.length);
+            console.log('사용자 목록:', users.map(u => ({ id: u.id, nickname: u.nickname, department: u.department })));
+            console.log('스캔 기록:', scans.map(s => ({ userId: s.userId, date: s.date })));
+            
+            // 개인 랭킹 (Firebase Auth UID와 Firestore 문서 ID 모두 고려)
             const personalRanking = users.map(user => {
-                const userScans = scans.filter(scan => scan.userId === user.id);
-                return { ...user, totalCups: userScans.length, totalCO2: userScans.length * 30 };
+                // Firebase Auth UID와 Firestore 문서 ID 모두로 스캔 기록 찾기
+                const userScans = scans.filter(scan => 
+                    scan.userId === user.id || 
+                    scan.userId === user.uid || 
+                    scan.userId === user.email
+                );
+                
+                console.log(`사용자 ${user.nickname}의 스캔 기록:`, userScans.length, '개');
+                
+                return { 
+                    ...user, 
+                    totalCups: userScans.length, 
+                    totalCO2: userScans.length * 30 
+                };
             }).sort((a, b) => b.totalCups - a.totalCups);
+            
+            console.log('개인 랭킹:', personalRanking.map(r => ({ 
+                nickname: r.nickname, 
+                department: r.department, 
+                totalCups: r.totalCups 
+            })));
             
             // 학과 랭킹
             const departmentStats = {};
             users.forEach(user => {
+                if (!user.department) return; // 학과 정보가 없는 사용자 제외
+                
                 if (!departmentStats[user.department]) {
                     departmentStats[user.department] = { totalCups: 0, totalUsers: 0 };
                 }
-                const userScans = scans.filter(scan => scan.userId === user.id);
+                
+                // Firebase Auth UID와 Firestore 문서 ID 모두로 스캔 기록 찾기
+                const userScans = scans.filter(scan => 
+                    scan.userId === user.id || 
+                    scan.userId === user.uid || 
+                    scan.userId === user.email
+                );
+                
                 departmentStats[user.department].totalCups += userScans.length;
                 departmentStats[user.department].totalUsers += 1;
             });
@@ -350,6 +391,8 @@ class CupBackAppFirebase {
                     totalCO2: stats.totalCups * 30
                 }))
                 .sort((a, b) => b.totalCups - a.totalCups);
+            
+            console.log('학과 랭킹:', departmentRanking);
             
             return { personalRanking, departmentRanking };
         } catch (error) {
@@ -835,40 +878,75 @@ class CupBackAppFirebase {
     // 랭킹 로드
     async loadRankings() {
         try {
+            console.log('랭킹 로드 시작...');
             const rankings = await this.getRankings();
             const personalRankingEl = document.getElementById('personalRanking');
             const departmentRankingEl = document.getElementById('departmentRanking');
             
+            console.log('랭킹 데이터:', rankings);
+            
             if (personalRankingEl) {
-                personalRankingEl.innerHTML = rankings.personalRanking.map((user, index) => `
-                    <div class="ranking-item">
-                        <div class="ranking-number">${index + 1}</div>
-                        <div class="ranking-info">
-                            <div class="ranking-name">${user.nickname || user.name || '익명'}</div>
-                            <div class="ranking-dept">${user.department}</div>
+                if (rankings.personalRanking.length === 0) {
+                    personalRankingEl.innerHTML = `
+                        <div class="ranking-empty">
+                            <div class="empty-icon">🏆</div>
+                            <p>아직 랭킹 데이터가 없습니다.</p>
+                            <p>첫 번째 컵을 회수해보세요!</p>
                         </div>
-                        <div class="ranking-stats">
-                            <div class="ranking-cups">${user.totalCups}개</div>
-                            <div class="ranking-co2">${user.totalCO2}g</div>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                } else {
+                    personalRankingEl.innerHTML = rankings.personalRanking.map((user, index) => {
+                        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                        return `
+                            <div class="ranking-item">
+                                <div class="ranking-number">
+                                    ${medal}${index + 1}
+                                </div>
+                                <div class="ranking-info">
+                                    <div class="ranking-name">${user.nickname || user.name || '익명'}</div>
+                                    <div class="ranking-dept">${user.department || '학과 미지정'}</div>
+                                </div>
+                                <div class="ranking-stats">
+                                    <div class="ranking-cups">${user.totalCups}개</div>
+                                    <div class="ranking-co2">${user.totalCO2}g</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                console.log('개인 랭킹 업데이트 완료');
             }
             
             if (departmentRankingEl) {
-                departmentRankingEl.innerHTML = rankings.departmentRanking.map((dept, index) => `
-                    <div class="ranking-item">
-                        <div class="ranking-number">${index + 1}</div>
-                        <div class="ranking-info">
-                            <div class="ranking-name">${dept.department}</div>
-                            <div class="ranking-users">${dept.totalUsers}명 참여</div>
+                if (rankings.departmentRanking.length === 0) {
+                    departmentRankingEl.innerHTML = `
+                        <div class="ranking-empty">
+                            <div class="empty-icon">🎓</div>
+                            <p>아직 학과 랭킹 데이터가 없습니다.</p>
+                            <p>더 많은 학생들이 참여해보세요!</p>
                         </div>
-                        <div class="ranking-stats">
-                            <div class="ranking-cups">${dept.totalCups}개</div>
-                            <div class="ranking-co2">${dept.totalCO2}g</div>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                } else {
+                    departmentRankingEl.innerHTML = rankings.departmentRanking.map((dept, index) => {
+                        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                        return `
+                            <div class="ranking-item">
+                                <div class="ranking-number">
+                                    ${medal}${index + 1}
+                                </div>
+                                <div class="ranking-info">
+                                    <div class="ranking-name">${dept.department}</div>
+                                    <div class="ranking-users">${dept.totalUsers}명 참여</div>
+                                </div>
+                                <div class="ranking-stats">
+                                    <div class="ranking-cups">${dept.totalCups}개</div>
+                                    <div class="ranking-co2">${dept.totalCO2}g</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                console.log('학과 랭킹 업데이트 완료');
             }
             
         } catch (error) {
