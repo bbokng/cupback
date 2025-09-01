@@ -465,21 +465,30 @@ class CupBackAppFirebase {
             startQrBtn.textContent = '🔄 스캔 중...';
             startQrBtn.disabled = true;
             
-            // QR Reader 영역을 먼저 보이게 설정
+            // QR Reader 영역을 완전히 초기화하고 보이게 설정
+            qrReader.innerHTML = '';
             qrReader.style.display = 'block';
-            qrReader.style.minHeight = '300px';
-            qrReader.style.border = '2px solid #4CAF50';
-            qrReader.style.borderRadius = '8px';
-            qrReader.style.margin = '10px auto';
+            qrReader.style.width = '100%';
+            qrReader.style.maxWidth = '480px';
+            qrReader.style.minHeight = '400px';
+            qrReader.style.border = '3px solid #4CAF50';
+            qrReader.style.borderRadius = '12px';
+            qrReader.style.margin = '15px auto';
+            qrReader.style.backgroundColor = '#f0f0f0';
+            qrReader.style.position = 'relative';
+            
+            // 로딩 메시지 추가
+            qrReader.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">카메라를 시작하는 중...</div>';
             
             const html5QrCode = new Html5Qrcode("qrReader");
             
-            // 카메라 설정 (후면 카메라 우선)
+            // 카메라 설정 (더 큰 QR 박스)
             const config = {
                 fps: 10,
-                qrbox: { width: 250, height: 250 },
+                qrbox: { width: 300, height: 300 },
                 aspectRatio: 1.0,
-                disableFlip: false
+                disableFlip: false,
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
             };
             
             // 사용 가능한 카메라 목록 가져오기
@@ -488,12 +497,15 @@ class CupBackAppFirebase {
             
             let selectedCamera = null;
             
-            // 후면 카메라 찾기
+            // 후면 카메라 찾기 (더 정확한 검색)
             for (const device of devices) {
                 console.log('카메라 확인:', device.label, device.id);
-                if (device.label.toLowerCase().includes('back') || 
-                    device.label.toLowerCase().includes('rear') ||
-                    device.label.toLowerCase().includes('후면')) {
+                const label = device.label.toLowerCase();
+                if (label.includes('back') || 
+                    label.includes('rear') ||
+                    label.includes('후면') ||
+                    label.includes('environment') ||
+                    label.includes('world')) {
                     selectedCamera = device.id;
                     console.log('후면 카메라 선택:', device.label);
                     break;
@@ -531,7 +543,8 @@ class CupBackAppFirebase {
                 }
             );
             
-            this.showToast('QR 스캐너가 시작되었습니다. 카메라 화면을 확인하세요.', 'success');
+            // 성공 메시지 업데이트
+            this.showToast('QR 스캐너가 시작되었습니다! 카메라 화면이 보입니다.', 'success');
             
         } catch (error) {
             console.error('QR 스캐너 시작 오류:', error);
@@ -539,6 +552,7 @@ class CupBackAppFirebase {
             startQrBtn.textContent = '📷 카메라로 스캔';
             startQrBtn.disabled = false;
             qrReader.style.display = 'none';
+            qrReader.innerHTML = '';
         }
     }
 
