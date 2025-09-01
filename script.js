@@ -639,8 +639,147 @@ class CupBackAppFirebase {
     }
 
     // 대시보드 페이지 초기화
-    initDashboardPage() {
-        this.updateStats();
+    async initDashboardPage() {
+        // 전체 통계 업데이트
+        await this.updateStats();
+        
+        // 개인 통계 업데이트
+        await this.updateUserStats();
+        
+        // 기여도 계산 및 업데이트
+        await this.updateContributionPercentage();
+        
+        // 최근 활동 업데이트
+        await this.updateRecentActivity();
+    }
+    
+    // 개인 통계 업데이트
+    async updateUserStats() {
+        if (!this.currentUser) {
+            console.log('사용자가 로그인되지 않았습니다.');
+            return;
+        }
+        
+        try {
+            const userStats = await this.getUserStats(this.currentUser.uid);
+            
+            // 개인 통계 요소들 업데이트
+            const userTotalEl = document.getElementById('userTotal');
+            const userTodayEl = document.getElementById('userToday');
+            const userCO2El = document.getElementById('userCO2');
+            
+            if (userTotalEl) userTotalEl.textContent = userStats.totalCups.toLocaleString();
+            if (userTodayEl) userTodayEl.textContent = userStats.todayCups.toLocaleString();
+            if (userCO2El) userCO2El.textContent = userStats.totalCO2.toLocaleString();
+            
+            console.log('개인 통계 업데이트 완료:', userStats);
+            
+        } catch (error) {
+            console.error('개인 통계 업데이트 오류:', error);
+        }
+    }
+    
+    // 기여도 퍼센트 계산 및 업데이트
+    async updateContributionPercentage() {
+        if (!this.currentUser) {
+            console.log('사용자가 로그인되지 않았습니다.');
+            return;
+        }
+        
+        try {
+            const userStats = await this.getUserStats(this.currentUser.uid);
+            const totalStats = await this.getStats();
+            
+            let percentage = 0;
+            if (totalStats.totalCups > 0) {
+                percentage = Math.round((userStats.totalCups / totalStats.totalCups) * 100);
+            }
+            
+            const progressPercentageEl = document.getElementById('progressPercentage');
+            if (progressPercentageEl) {
+                progressPercentageEl.textContent = percentage;
+            }
+            
+            console.log('기여도 계산 완료:', percentage + '%');
+            
+        } catch (error) {
+            console.error('기여도 계산 오류:', error);
+        }
+    }
+    
+    // 최근 활동 업데이트
+    async updateRecentActivity() {
+        if (!this.currentUser) {
+            console.log('사용자가 로그인되지 않았습니다.');
+            return;
+        }
+        
+        try {
+            const activityListEl = document.getElementById('activityList');
+            if (!activityListEl) return;
+            
+            // 사용자의 최근 스캔 기록 가져오기
+            const scansSnapshot = await this.db.collection('scans')
+                .where('userId', '==', this.currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .limit(5)
+                .get();
+            
+            const activities = scansSnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    date: data.createdAt ? data.createdAt.toDate() : new Date(),
+                    code: data.code
+                };
+            });
+            
+            if (activities.length === 0) {
+                activityListEl.innerHTML = `
+                    <div class="activity-empty">
+                        <p>아직 활동 내역이 없습니다.</p>
+                        <p>첫 번째 컵을 회수해보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            activityListEl.innerHTML = activities.map(activity => {
+                const timeAgo = this.getTimeAgo(activity.date);
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon">☕</div>
+                        <div class="activity-content">
+                            <div class="activity-title">컵 회수 완료 (${activity.code})</div>
+                            <div class="activity-time">${timeAgo}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            console.log('최근 활동 업데이트 완료:', activities.length + '개 활동');
+            
+        } catch (error) {
+            console.error('최근 활동 업데이트 오류:', error);
+        }
+    }
+    
+    // 시간 경과 계산 헬퍼 함수
+    getTimeAgo(date) {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) {
+            return '방금 전';
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes}분 전`;
+        } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours}시간 전`;
+        } else {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days}일 전`;
+        }
     }
 
     // 게시판 페이지 초기화
